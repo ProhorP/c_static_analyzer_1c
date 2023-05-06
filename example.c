@@ -5,11 +5,9 @@
 
 enum TOKEN {
 ERROR //0
-, IF //1
+, NUMBER //1
 , ID //2
-, NUMBER //3
-, BAD_ID //4
-, TEST //4
+, TEST //3
  };
 
 /*!include:re2c "unicode_categories.re" */
@@ -29,21 +27,16 @@ lex (const char *s, const char **new_pos)
      //id_continue_utf = id_start_utf | Mn | Mc | Nd | Pc | [\u200D\u05F3];
      //identifier_utf  = id_start_utf id_continue*;
 
-     one = [!];
-     two = [;];
-     ws = [ ];
+     one = "!";
+     two = ";";
+     ws = " ";
      splitters = one two ws;
      test = [splitters]+;
      digit = [0-9];
      digits = digit+;
      number = digits([\.]digits)?;
-     if = 'if';
-     id = [^ !;]+;
-     bad_id = number id;
-     if { *new_pos = YYCURSOR; return IF; }
+     id = [^ !;\.]+;
      number { *new_pos = YYCURSOR; return NUMBER; }
-     test { *new_pos = YYCURSOR; return TEST; }
-     bad_id { *new_pos = YYCURSOR; return BAD_ID; }
      id { *new_pos = YYCURSOR; return ID; }
      *          { return ERROR; }
    */
@@ -55,8 +48,8 @@ main ()
   const char *new_pos = NULL;
   enum TOKEN res = ERROR;
 
-#if 0
-  const char *lexeme = "0123.222 ";
+#if 1
+  const char *lexeme = "0123.222A ";
 #endif
 #if 0
   const char *lexeme = "IF 1";
@@ -71,7 +64,7 @@ main ()
   const char *lexeme = "1_ЫдентифиZкатор 1";
 #endif
 
-#if 1
+#if 0
   const char *lexeme = ";!;";
 #endif
 
