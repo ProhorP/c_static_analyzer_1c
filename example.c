@@ -1,6 +1,5 @@
 // re2c $INPUT -o $OUTPUT -8 --case-ranges -i
 #include <assert.h>
-//#include <stdint.h>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <stdlib.h>
@@ -10,14 +9,15 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-enum TOKEN {
-ERROR //0
-, NUMBER //1
-, ID //2
-, DATE //3
-, LITERAL //4
-, TEST //5
- };
+enum TOKEN
+{
+  ERROR				//0
+    , NUMBER			//1
+    , DATE			//2
+    , LITERAL			//3
+    , ID			//4
+    , TEST			//5
+};
 
 void
 print_error (const char *format, ...)
@@ -56,7 +56,7 @@ lex (const char **start_pos, const char **end_pos)
 }
 
 int
-main (int argc, char** argv)
+main (int argc, char **argv)
 {
 
   if (argc != 2)
