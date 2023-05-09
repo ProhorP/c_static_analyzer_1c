@@ -12,14 +12,20 @@
 enum TOKEN
 {
   ERROR				//0
-    , TEST			//7
-    , POINT			//6
-    , COMMA			//6
-    , RELOP			//5
-    , NUMBER			//1
-    , DATE			//2
-    , LITERAL			//3
-    , ID			//4
+    , TEST			//1
+    , POINT			//2
+    , COMMA			//3
+    , SEMICOLON			//4
+    , LEFT_PARENTHESIS		//5
+    , RIGHT_PARENTHESIS		//6
+    , LEFT_SQUARE_BRACKET	//7
+    , RIGHT_SQUARE_BRACKET	//8
+    , WHITESPACE		//9
+    , RELOP			//10
+    , NUMBER			//11
+    , DATE			//12
+    , LITERAL			//13
+    , ID			//14
 };
 
 void
@@ -43,18 +49,30 @@ lex (const char **start_pos, const char **end_pos)
      re2c:define:YYCTYPE = 'unsigned char';
      re2c:yyfill:enable = 0;
 
-     point = [\.];
-     comma = [\,];
+     point = '.';
+     comma = ',';
+     semicolon = ';';
+     left_parenthesis = '(';
+     right_parenthesis = ')';
+     left_square_bracket = '[';
+     right_square_bracket = ']';
+     whitespace = ' ';
      relop = [=<>]+;
      digit = [0-9];
      digits = digit+;
      number = digits([\.]digits)?;
      date = ['] [^']+ ['];
      literal = ["] ([^"] | [""])* ["];
-     id = [^ ;\.'"=<>]+;
+     id = [^'"\.,;()\[\] =<>]+;
 
      point { *end_pos = YYCURSOR; return POINT; }
      comma { *end_pos = YYCURSOR; return COMMA; }
+     semicolon { *end_pos = YYCURSOR; return SEMICOLON; }
+     left_parenthesis { *end_pos = YYCURSOR; return LEFT_PARENTHESIS; }
+     right_parenthesis { *end_pos = YYCURSOR; return RIGHT_PARENTHESIS; }
+     left_square_bracket { *end_pos = YYCURSOR; return LEFT_SQUARE_BRACKET; }
+     right_square_bracket { *end_pos = YYCURSOR; return RIGHT_SQUARE_BRACKET; }
+     whitespace { *end_pos = YYCURSOR; return WHITESPACE; }
      relop { *end_pos = YYCURSOR; return RELOP; }
      number { *end_pos = YYCURSOR; return NUMBER; }
      date { *end_pos = YYCURSOR; return DATE; }
