@@ -12,11 +12,14 @@
 enum TOKEN
 {
   ERROR				//0
+    , TEST			//7
+    , POINT			//6
+    , COMMA			//6
+    , RELOP			//5
     , NUMBER			//1
     , DATE			//2
     , LITERAL			//3
     , ID			//4
-    , TEST			//5
 };
 
 void
@@ -40,13 +43,19 @@ lex (const char **start_pos, const char **end_pos)
      re2c:define:YYCTYPE = 'unsigned char';
      re2c:yyfill:enable = 0;
 
+     point = [\.];
+     comma = [\,];
+     relop = [=<>]+;
      digit = [0-9];
      digits = digit+;
      number = digits([\.]digits)?;
-     id = [^ ;\.'"]+;
      date = ['] [^']+ ['];
      literal = ["] ([^"] | [""])* ["];
+     id = [^ ;\.'"=<>]+;
 
+     point { *end_pos = YYCURSOR; return POINT; }
+     comma { *end_pos = YYCURSOR; return COMMA; }
+     relop { *end_pos = YYCURSOR; return RELOP; }
      number { *end_pos = YYCURSOR; return NUMBER; }
      date { *end_pos = YYCURSOR; return DATE; }
      literal { *end_pos = YYCURSOR; return LITERAL; }
