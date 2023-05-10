@@ -50,11 +50,13 @@ lex (const char **start_pos, const char **end_pos, const char *limit)
   const char *YYCURSOR = *start_pos, *YYLIMIT = limit, *YYMARKER;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+loop:
   /*!re2c
      re2c:define:YYCTYPE = 'unsigned char';
      re2c:yyfill:enable = 0;
      re2c:eof = 0;
 
+     comment = [\/][\/][^\n]*[\n];
      point = '.';
      comma = ',';
      semicolon = ';';
@@ -74,6 +76,8 @@ lex (const char **start_pos, const char **end_pos, const char *limit)
      literal = ["] ([^"] | ["]["])* ["];
      id = [^'"\.,;()\[\] \t\n=<>+-*\/%]+;
 
+
+     comment { *start_pos = YYCURSOR; goto loop; }
      point { *end_pos = YYCURSOR; return POINT; }
      comma { *end_pos = YYCURSOR; return COMMA; }
      semicolon { *end_pos = YYCURSOR; return SEMICOLON; }
