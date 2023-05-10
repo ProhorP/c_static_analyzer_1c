@@ -1,0 +1,17 @@
+gcc -Wall -Wextra -Wpedantic -std=c11 -g splitter.c
+./a.out ./test/test01
+"abc""abc1""321"
+res:17
++
+res:14
+"def"
+res:17
+
+
+res:12
+"123""321"""
+res:17
+
+
+res:12
+rm a.out 

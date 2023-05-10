@@ -48,7 +48,6 @@ enum TOKEN
 lex (const char **start_pos, const char **end_pos, const char *limit)
 {
   const char *YYCURSOR = *start_pos, *YYLIMIT = limit, *YYMARKER;
-  *end_pos = *start_pos;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
   /*!re2c
@@ -72,7 +71,7 @@ lex (const char **start_pos, const char **end_pos, const char *limit)
      digits = digit+;
      number = digits([\.]digits)?;
      date = ['] [^']+ ['];
-     literal = ["] ([^"] | [""])* ["];
+     literal = ["] ([^"] | ["]["])* ["];
      id = [^'"\.,;()\[\] \t\n=<>+-*\/%]+;
 
      point { *end_pos = YYCURSOR; return POINT; }
@@ -92,7 +91,7 @@ lex (const char **start_pos, const char **end_pos, const char *limit)
      literal { *end_pos = YYCURSOR; return LITERAL; }
      id { *end_pos = YYCURSOR; return ID; }
      $ { *end_pos = YYCURSOR; return END; }
-     *  { return ERROR; }
+     *  { *end_pos = YYCURSOR; return ERROR; }
    */
 #pragma GCC diagnostic pop
 }
