@@ -22,11 +22,13 @@ enum TOKEN
     , LEFT_SQUARE_BRACKET	//8
     , RIGHT_SQUARE_BRACKET	//9
     , WHITESPACE		//10
-    , RELOP			//11
-    , NUMBER			//12
-    , DATE			//13
-    , LITERAL			//14
-    , ID			//15
+    , TAB		//11
+    , NEWLINE		//12
+    , RELOP			//13
+    , NUMBER			//14
+    , DATE			//15
+    , LITERAL			//16
+    , ID			//17
 };
 
 void
@@ -58,14 +60,16 @@ lex (const char **start_pos, const char **end_pos, const unsigned char *limit)
      right_parenthesis = ')';
      left_square_bracket = '[';
      right_square_bracket = ']';
-     whitespace = ' ';
+     whitespace = [ ]+;
+     tab = [\t]+;
+     newline = [\n]+;
      relop = [=<>]+;
      digit = [0-9];
      digits = digit+;
      number = digits([\.]digits)?;
      date = ['] [^']+ ['];
      literal = ["] ([^"] | [""])* ["];
-     id = [^'"\.,;()\[\] =<>]+;
+     id = [^'"\.,;()\[\] \t\n=<>]+;
 
      point { *end_pos = YYCURSOR; return POINT; }
      comma { *end_pos = YYCURSOR; return COMMA; }
@@ -75,6 +79,8 @@ lex (const char **start_pos, const char **end_pos, const unsigned char *limit)
      left_square_bracket { *end_pos = YYCURSOR; return LEFT_SQUARE_BRACKET; }
      right_square_bracket { *end_pos = YYCURSOR; return RIGHT_SQUARE_BRACKET; }
      whitespace { *end_pos = YYCURSOR; return WHITESPACE; }
+     tab { *end_pos = YYCURSOR; return TAB; }
+     newline { *end_pos = YYCURSOR; return NEWLINE; }
      relop { *end_pos = YYCURSOR; return RELOP; }
      number { *end_pos = YYCURSOR; return NUMBER; }
      date { *end_pos = YYCURSOR; return DATE; }
