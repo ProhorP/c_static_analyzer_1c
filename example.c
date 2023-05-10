@@ -12,20 +12,21 @@
 enum TOKEN
 {
   ERROR				//0
-    , TEST			//1
-    , POINT			//2
-    , COMMA			//3
-    , SEMICOLON			//4
-    , LEFT_PARENTHESIS		//5
-    , RIGHT_PARENTHESIS		//6
-    , LEFT_SQUARE_BRACKET	//7
-    , RIGHT_SQUARE_BRACKET	//8
-    , WHITESPACE		//9
-    , RELOP			//10
-    , NUMBER			//11
-    , DATE			//12
-    , LITERAL			//13
-    , ID			//14
+    , END			//1
+    , TEST			//2
+    , POINT			//3
+    , COMMA			//4
+    , SEMICOLON			//5
+    , LEFT_PARENTHESIS		//6
+    , RIGHT_PARENTHESIS		//7
+    , LEFT_SQUARE_BRACKET	//8
+    , RIGHT_SQUARE_BRACKET	//9
+    , WHITESPACE		//10
+    , RELOP			//11
+    , NUMBER			//12
+    , DATE			//13
+    , LITERAL			//14
+    , ID			//15
 };
 
 void
@@ -41,13 +42,14 @@ print_error (const char *format, ...)
 /*!include:re2c "unicode_categories.re" */
 
 enum TOKEN
-lex (const char **start_pos, const char **end_pos)
+lex (const char **start_pos, const char **end_pos, const unsigned char *limit)
 {
-  const char *YYCURSOR = *start_pos, *YYMARKER;
+  const char *YYCURSOR = *start_pos, *YYLIMIT = limit, *YYMARKER;
   *end_pos = *start_pos;
   /*!re2c
      re2c:define:YYCTYPE = 'unsigned char';
      re2c:yyfill:enable = 0;
+     re2c:eof = 0;
 
      point = '.';
      comma = ',';
@@ -78,6 +80,7 @@ lex (const char **start_pos, const char **end_pos)
      date { *end_pos = YYCURSOR; return DATE; }
      literal { *end_pos = YYCURSOR; return LITERAL; }
      id { *end_pos = YYCURSOR; return ID; }
+     $ { *end_pos = YYCURSOR; return END; }
      *  { return ERROR; }
    */
 }
@@ -108,10 +111,11 @@ main (int argc, char **argv)
     print_error ("%s\n",
 		 "Ошибка вызова функции mmap для входного файла");
 
+  const char *limit = (const char *) src + statbuf.st_size;
   const char *start_pos = (const char *) src;
   const char *end_pos = NULL;
 
-  enum TOKEN res = lex (&start_pos, &end_pos);
+  enum TOKEN res = lex (&start_pos, &end_pos, limit);
   size_t n = end_pos - start_pos;
   memcpy (buf, start_pos, n);
   buf[n] = '\0';
