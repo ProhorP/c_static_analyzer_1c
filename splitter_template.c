@@ -44,10 +44,12 @@ print_error (const char *format, ...)
 /*!include:re2c "unicode_categories.re" */
 
 enum TOKEN
-lex (const char **start_pos, const char **end_pos, const unsigned char *limit)
+lex (const char **start_pos, const char **end_pos, const char *limit)
 {
   const char *YYCURSOR = *start_pos, *YYLIMIT = limit, *YYMARKER;
   *end_pos = *start_pos;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
   /*!re2c
      re2c:define:YYCTYPE = 'unsigned char';
      re2c:yyfill:enable = 0;
@@ -89,6 +91,7 @@ lex (const char **start_pos, const char **end_pos, const unsigned char *limit)
      $ { *end_pos = YYCURSOR; return END; }
      *  { return ERROR; }
    */
+#pragma GCC diagnostic pop
 }
 
 int
@@ -120,13 +123,19 @@ main (int argc, char **argv)
   const char *limit = (const char *) src + statbuf.st_size;
   const char *start_pos = (const char *) src;
   const char *end_pos = NULL;
+  enum TOKEN res = ERROR;
+  size_t n = 0;
 
-  enum TOKEN res = lex (&start_pos, &end_pos, limit);
-  size_t n = end_pos - start_pos;
-  memcpy (buf, start_pos, n);
-  buf[n] = '\0';
-
-  printf ("%s\nres:%d\n", buf, res);
+  do
+    {
+      res = lex (&start_pos, &end_pos, limit);
+      n = end_pos - start_pos;
+      memcpy (buf, start_pos, n);
+      buf[n] = '\0';
+      printf ("%s\nres:%d\n", buf, res);
+      start_pos = end_pos;
+    }
+  while (start_pos != limit);
 
   munmap (src, statbuf.st_size);
   return EXIT_SUCCESS;

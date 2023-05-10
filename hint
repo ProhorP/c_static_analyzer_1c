@@ -1,1 +1,0 @@
-~/re2c/.build/re2c ./example.c -o ./result.c -8 --case-ranges -i -I ~/re2c/include/;gcc result.c; ./a.out ./test/test01; rm a.out
