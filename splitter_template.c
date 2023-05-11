@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#define BUFFSIZE 409600
 enum TOKEN
 {
   ERROR				//0
@@ -104,16 +105,22 @@ int
 main (int argc, char **argv)
 {
 
-  if (argc != 2)
-    print_error ("%s", "Не указан входной файл");
+  if (argc != 3)
+    print_error ("%s", "Правильный формат:./a.out ./test/test01 ./log");
 
   struct stat statbuf;
-  int fd;
-  char buf[4096] = { 0 };
+  int fd, fd_log;
+  char buf[BUFFSIZE] = { 0 };
 
   if ((fd = open (argv[1], O_RDONLY)) < 0)
     print_error ("невозможно открыть %s для чтения",
 		 argv[1]);
+
+  if ((fd_log =
+       open (argv[2], O_WRONLY | O_CREAT | O_APPEND,
+	     S_IWUSR | S_IRUSR)) < 0)
+    print_error ("невозможно открыть %s для записи",
+		 argv[2]);
 
   if (fstat (fd, &statbuf) < 0)
     print_error
@@ -136,9 +143,13 @@ main (int argc, char **argv)
     {
       res = lex (&start_pos, &end_pos, limit);
       n = end_pos - start_pos;
+      assert(n < BUFFSIZE);
       memcpy (buf, start_pos, n);
       buf[n] = '\0';
-      printf ("%s\nres:%d\n", buf, res);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
+      dprintf (fd_log, "%s\nres:%d\n", buf, res);
+#pragma GCC diagnostic pop
       start_pos = end_pos;
     }
   while (start_pos != limit);
