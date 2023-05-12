@@ -30,7 +30,9 @@ enum TOKEN
     , NUMBER			//15
     , DATE			//16
     , LITERAL			//17
-    , ID			//18
+    , PREPROCESSOR			//18
+    , AREA			//19
+    , ID			//20
 };
 
 void
@@ -57,7 +59,7 @@ loop:
      re2c:yyfill:enable = 0;
      re2c:eof = 0;
 
-     comment = [\/][\/][^\n]*[\n];
+     comment = [\/][\/][^\n]*;
      point = '.';
      comma = ',';
      semicolon = ';';
@@ -69,13 +71,15 @@ loop:
      tab = [\t]+;
      newline = [\n]+;
      relop = [=<>]+;
-     math = [+-*\/%];
+     math = [+\-*\/%];
      digit = [0-9];
      digits = digit+;
      number = digits([\.]digits)?;
      date = ['] [^']+ ['];
      literal = ["] ([^"] | ["]["])* ["];
-     id = [^'"\.,;()\[\] \t\n=<>+-*\/%]+;
+     preprocessor = [&][^\n]+;
+     area = [#][^\n]+;
+     id = [^'"\.,;()\[\] \t\n=<>+\-*\/%&#]+;
 
 
      comment { *start_pos = YYCURSOR; goto loop; }
@@ -94,6 +98,8 @@ loop:
      number { *end_pos = YYCURSOR; return NUMBER; }
      date { *end_pos = YYCURSOR; return DATE; }
      literal { *end_pos = YYCURSOR; return LITERAL; }
+     preprocessor { *end_pos = YYCURSOR; return PREPROCESSOR; }
+     area { *end_pos = YYCURSOR; return AREA; }
      id { *end_pos = YYCURSOR; return ID; }
      $ { *end_pos = YYCURSOR; return END; }
      *  { *end_pos = YYCURSOR; return ERROR; }
