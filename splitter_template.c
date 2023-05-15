@@ -8,6 +8,8 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <glib.h>
+#include <glib/gprintf.h>
 
 #define BUFFSIZE 409600
 enum TOKEN
@@ -158,6 +160,15 @@ main (int argc, char **argv)
 	{
 	  memcpy (buf, start_pos, n);
 	  buf[n] = '\0';
+	  if (res == ID)
+	    {
+	      gchar *buf_upper = g_utf8_strup (buf, n);
+	      n = strlen (buf_upper);
+	      assert (n < BUFFSIZE);
+	      memcpy (buf, buf_upper, n);
+	      buf_upper[n] = '\0';
+	      g_free (buf_upper);
+	    }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
 	  dprintf (fd_log, "%ld:%s\nres:%d\n", line, buf, res);
