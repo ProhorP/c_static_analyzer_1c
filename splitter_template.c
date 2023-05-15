@@ -12,7 +12,7 @@
 #include <glib/gprintf.h>
 
 #define BUFFSIZE 409600
-enum TOKEN
+enum TAG
 {
   ERROR				//0
     , END			//1
@@ -37,6 +37,39 @@ enum TOKEN
     , ID			//20
 };
 
+enum TAG_VALUE
+{
+  EMPTY				//0
+    , LT			//1
+    , LE			//2
+    , EQ			//3
+    , NE			//4
+    , GT			//5
+    , GE			//6
+    , PLUS			//7
+    , MINUS			//8
+    , MULTIPLY			//9
+    , DIVISION			//10
+    , REMAINDER_OF_DIVISION	//11
+};
+
+typedef struct
+{
+  enum TAG tag;
+} token;
+
+typedef struct
+{
+  token base;
+  enum TAG_VALUE value;
+} reserve_token;
+
+typedef struct
+{
+  token base;
+  char *string;
+} malloc_token;
+
 void
 print_error (const char *format, ...)
 {
@@ -49,7 +82,7 @@ print_error (const char *format, ...)
 
 /*!include:re2c "unicode_categories.re" */
 
-enum TOKEN
+enum TAG
 lex (const char **start_pos, const char **end_pos, const char *limit)
 {
   const char *YYCURSOR = *start_pos, *YYLIMIT = limit, *YYMARKER;
@@ -144,7 +177,7 @@ main (int argc, char **argv)
   const char *limit = (const char *) src + statbuf.st_size;
   const char *start_pos = (const char *) src;
   const char *end_pos = NULL;
-  enum TOKEN res = ERROR;
+  enum TAG res = ERROR;
   size_t n = 0, line = 1;
 
   do
