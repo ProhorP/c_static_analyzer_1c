@@ -37,38 +37,80 @@ enum TAG
     , ID			//20
 };
 
-enum TAG_VALUE
+char *tag_text[] = {
+  "ERROR"			//0
+    , "END"			//1
+    , "TEST"			//2
+    , "POINT"			//3
+    , "COMMA"			//4
+    , "SEMICOLON"		//5
+    , "LEFT_PARENTHESIS"	//6
+    , "RIGHT_PARENTHESIS"	//7
+    , "LEFT_SQUARE_BRACKET"	//8
+    , "RIGHT_SQUARE_BRACKET"	//9
+    , "WHITESPACE"		//10
+    , "TAB"			//11
+    , "NEWLINE"			//12
+    , "RELOP"			//13
+    , "MATH"			//14
+    , "NUMBER"			//15
+    , "DATE"			//16
+    , "LITERAL"			//17
+    , "PREPROCESSOR"		//18
+    , "AREA"			//19
+    , "ID"			//20
+};
+
+enum TAG_ATTRIBUTE
 {
   EMPTY				//0
-    , LT			//1
-    , LE			//2
-    , EQ			//3
-    , NE			//4
-    , GT			//5
-    , GE			//6
-    , PLUS			//7
-    , MINUS			//8
-    , MULTIPLY			//9
-    , DIVISION			//10
-    , REMAINDER_OF_DIVISION	//11
+    , PTR			//1
+    , LT			//2
+    , LE			//3
+    , EQ			//4
+    , NE			//5
+    , GT			//6
+    , GE			//7
+    , PLUS			//8
+    , MINUS			//9
+    , MULTIPLY			//10
+    , DIVISION			//11
+    , REMAINDER_OF_DIVISION	//12
+};
+
+char *tag_attribute[] = {
+  "EMPTY"			//0
+    , "PTR"			//1
+    , "LT"			//2
+    , "LE"			//3
+    , "EQ"			//4
+    , "NE"			//5
+    , "GT"			//6
+    , "GE"			//7
+    , "PLUS"			//8
+    , "MINUS"			//9
+    , "MULTIPLY"		//10
+    , "DIVISION"		//11
+    , "REMAINDER_OF_DIVISION"	//12
 };
 
 typedef struct
 {
   enum TAG tag;
+  enum TAG_ATTRIBUTE attribute;
+  size_t line;
+  char *text;
 } token;
 
-typedef struct
-{
-  token base;
-  enum TAG_VALUE value;
-} reserve_token;
+typedef struct entry_token entry_token;
 
-typedef struct
+struct entry_token
 {
-  token base;
-  char *string;
-} malloc_token;
+  entry_token *next;
+  token token;
+};
+
+entry_token *head_token = NULL;
 
 void
 print_error (const char *format, ...)
