@@ -10,13 +10,13 @@ build_test: splitter.c
 	$(CC) $(CFLAGS) $(GLIB_CONF) splitter.c $(GLIB_LIB) $(PCRE_LIB)
 
 test01:
-	./a.out ./test/test01 ./log
+	valgrind --leak-check=full ./a.out ./test/test01 ./log
 
 test02:
-	./a.out ./test/test02 ./log
+	valgrind --leak-check=full ./a.out ./test/test02 ./log
 
 test03:
-	./a.out ./test/test03 ./log
+	valgrind --leak-check=full ./a.out ./test/test03 ./log
 
 clean:
 	rm a.out 

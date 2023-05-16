@@ -112,6 +112,7 @@ struct entry_token
 
 entry_token *head_token = NULL;
 GHashTable *symbol_table = NULL;
+char buf_str[BUFFSIZE] = { 0 };
 
 token *
 create_token (enum TAG tag, size_t line, const char *start_pos,
@@ -119,22 +120,39 @@ create_token (enum TAG tag, size_t line, const char *start_pos,
 {
   gpointer lexeme = NULL;
   size_t n = end_pos - start_pos;
+  enum TAG_ATTRIBUTE attribute = EMPTY;
 
-  if (tag == ID)
+  assert (n < BUFFSIZE);
+
+  if (tag == ID || tag == PREPROCESSOR || tag == AREA)
     {
-      gchar *lexeme_upper = g_utf8_strup (start_pos, n);
-      lexeme = g_hash_table_lookup (symbol_table, lexeme_upper);
+      gchar *lexeme_find = g_utf8_strup (start_pos, n);
+      lexeme = g_hash_table_lookup (symbol_table, lexeme_find);
 
       if (lexeme != NULL)
-	g_free (lexeme_upper);
+	g_free (lexeme_find);
       else
 	{
 	  lexeme = (gpointer) calloc (1, n + 1);
 	  memcpy (lexeme, start_pos, n);
-	  g_hash_table_insert (symbol_table, lexeme_upper, lexeme);
+	  g_hash_table_insert (symbol_table, lexeme_find, lexeme);
 	}
     }
-  else if (tag == LITERAL)
+  else if (tag == NUMBER || tag == DATE || tag == LITERAL)
+    {
+      memcpy (buf_str, start_pos, n);
+      buf_str[n] = '\0';
+
+      lexeme = g_hash_table_lookup (symbol_table, buf_str);
+
+      if (lexeme == NULL)
+	{
+	  lexeme = g_strdup (buf_str);
+	  g_hash_table_insert (symbol_table, g_strdup(lexeme), lexeme);
+	}
+    }
+
+  if (tag == LITERAL)
     {
       const char *ptr_literal = start_pos;
       while (ptr_literal != end_pos)
@@ -152,7 +170,7 @@ create_token (enum TAG tag, size_t line, const char *start_pos,
   head_token = new_token;
 
   new_token->token.tag = tag;
-  new_token->token.attribute = EMPTY;
+  new_token->token.attribute = attribute;
   new_token->token.line = line;
   new_token->token.text = lexeme;
 
@@ -299,7 +317,8 @@ main (int argc, char **argv)
       tok = lex (&start_pos, &end_pos, limit, line);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
-      dprintf (fd_log, "%ld:%s\nres:%d\n", tok->line, tok->text, tok->tag);
+      dprintf (fd_log, "%ld:%s\nres:%s\n", tok->line, tok->text,
+	       tag_text[tok->tag]);
 #pragma GCC diagnostic pop
       start_pos = end_pos;
       line = tok->line;
