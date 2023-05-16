@@ -4,22 +4,37 @@ GLIB_CONF=`pkg-config --cflags glib-2.0`
 GLIB_LIB=`pkg-config --libs glib-2.0`
 PCRE_LIB=`pcre-config --libs`
 
-all: build_test test01 test02 test03 clean
+all: test
+
+test: make_splitter build_test test01 test02 test03 clean
+memory_leak_test: make_splitter build_test test01_m test02_m test03_m clean
+
+make_splitter:
+	~/re2c/.build/re2c ./splitter_template.c -o ./splitter.c -8 --case-ranges -i -I ~/re2c/include/
 
 build_test: splitter.c
 	$(CC) $(CFLAGS) $(GLIB_CONF) splitter.c $(GLIB_LIB) $(PCRE_LIB)
 
 test01:
-	valgrind --leak-check=full ./a.out ./test/test01 ./log
+	./a.out ./test/test01 ./log
 
 test02:
-	valgrind --leak-check=full ./a.out ./test/test02 ./log
+	./a.out ./test/test02 ./log
 
 test03:
+	./a.out ./test/test03 ./log
+
+test01_m:
+	valgrind --leak-check=full ./a.out ./test/test01 ./log
+
+test02_m:
+	valgrind --leak-check=full ./a.out ./test/test02 ./log
+
+test03_m:
 	valgrind --leak-check=full ./a.out ./test/test03 ./log
 
 clean:
-	rm a.out 
+	rm a.out; rm splitter.c 
 
-clean_log:
+log_clean:
 	rm ./log 
