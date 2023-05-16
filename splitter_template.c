@@ -111,6 +111,77 @@ struct entry_token
 };
 
 entry_token *head_token = NULL;
+GHashTable *symbol_table = NULL;
+
+token *
+create_token (enum TAG tag, size_t line, const char *start_pos,
+	      const char *end_pos)
+{
+  gpointer lexeme = NULL;
+  size_t n = end_pos - start_pos;
+
+  if (tag == ID)
+    {
+      gchar *lexeme_upper = g_utf8_strup (start_pos, n);
+      lexeme = g_hash_table_lookup (symbol_table, lexeme_upper);
+
+      if (lexeme != NULL)
+	g_free (lexeme_upper);
+      else
+	{
+	  lexeme = (gpointer) calloc (1, n + 1);
+	  memcpy (lexeme, start_pos, n);
+	  g_hash_table_insert (symbol_table, lexeme_upper, lexeme);
+	}
+    }
+  else if (tag == LITERAL)
+    {
+      const char *ptr_literal = start_pos;
+      while (ptr_literal != end_pos)
+	{
+	  if (*ptr_literal == '\n')
+	    {
+	      line++;
+	    }
+	  ptr_literal++;
+	}
+    }
+
+  entry_token *new_token = (entry_token *) malloc (sizeof (entry_token));
+  new_token->next = head_token;
+  head_token = new_token;
+
+  new_token->token.tag = tag;
+  new_token->token.attribute = EMPTY;
+  new_token->token.line = line;
+  new_token->token.text = lexeme;
+
+  return &(new_token->token);
+
+}
+
+void
+init_lex ()
+{
+  symbol_table =
+    g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+}
+
+void
+destroy_lex ()
+{
+  entry_token *temp = head_token, *next;
+  while (temp != NULL)
+    {
+      next = temp->next;
+      free (temp);
+      temp = next;
+    }
+
+  g_hash_table_destroy (symbol_table);
+  head_token = NULL;
+  symbol_table = NULL;
+}
 
 void
 print_error (const char *format, ...)
@@ -124,10 +195,12 @@ print_error (const char *format, ...)
 
 /*!include:re2c "unicode_categories.re" */
 
-enum TAG
-lex (const char **start_pos, const char **end_pos, const char *limit)
+token *
+lex (const char **start_pos, const char **end_pos, const char *limit,
+     size_t line)
 {
   const char *YYCURSOR = *start_pos, *YYLIMIT = limit, *YYMARKER;
+  size_t cur_line = line;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 loop:
@@ -158,28 +231,27 @@ loop:
      area = [#][^\n]+;
      id = [^'"\.,;()\[\] \t\n=<>+\-*\/%&#]+;
 
-
      comment { *start_pos = YYCURSOR; goto loop; }
-     point { *end_pos = YYCURSOR; return POINT; }
-     comma { *end_pos = YYCURSOR; return COMMA; }
-     semicolon { *end_pos = YYCURSOR; return SEMICOLON; }
-     left_parenthesis { *end_pos = YYCURSOR; return LEFT_PARENTHESIS; }
-     right_parenthesis { *end_pos = YYCURSOR; return RIGHT_PARENTHESIS; }
-     left_square_bracket { *end_pos = YYCURSOR; return LEFT_SQUARE_BRACKET; }
-     right_square_bracket { *end_pos = YYCURSOR; return RIGHT_SQUARE_BRACKET; }
-     whitespace { *end_pos = YYCURSOR; return WHITESPACE; }
-     tab { *end_pos = YYCURSOR; return TAB; }
-     newline { *end_pos = YYCURSOR; return NEWLINE; }
-     relop { *end_pos = YYCURSOR; return RELOP; }
-     math { *end_pos = YYCURSOR; return MATH; }
-     number { *end_pos = YYCURSOR; return NUMBER; }
-     date { *end_pos = YYCURSOR; return DATE; }
-     literal { *end_pos = YYCURSOR; return LITERAL; }
-     preprocessor { *end_pos = YYCURSOR; return PREPROCESSOR; }
-     area { *end_pos = YYCURSOR; return AREA; }
-     id { *end_pos = YYCURSOR; return ID; }
-     $ { *end_pos = YYCURSOR; return END; }
-     *  { *end_pos = YYCURSOR; return ERROR; }
+     point { *end_pos = YYCURSOR; return create_token(POINT, cur_line, *start_pos, *end_pos); }
+     comma { *end_pos = YYCURSOR; return create_token(COMMA, cur_line, *start_pos, *end_pos); }
+     semicolon { *end_pos = YYCURSOR; return create_token(SEMICOLON, cur_line, *start_pos, *end_pos); }
+     left_parenthesis { *end_pos = YYCURSOR; return create_token(LEFT_PARENTHESIS, cur_line, *start_pos, *end_pos); }
+     right_parenthesis { *end_pos = YYCURSOR; return create_token(RIGHT_PARENTHESIS, cur_line, *start_pos, *end_pos); }
+     left_square_bracket { *end_pos = YYCURSOR; return create_token(LEFT_SQUARE_BRACKET, cur_line, *start_pos, *end_pos); }
+     right_square_bracket { *end_pos = YYCURSOR; return create_token(RIGHT_SQUARE_BRACKET, cur_line, *start_pos, *end_pos); }
+     whitespace { *end_pos = YYCURSOR; return create_token(WHITESPACE, cur_line, *start_pos, *end_pos); }
+     tab { *end_pos = YYCURSOR; return create_token(TAB, cur_line, *start_pos, *end_pos); }
+     newline { cur_line += YYCURSOR - *start_pos ; *start_pos = YYCURSOR; goto loop; }
+     relop { *end_pos = YYCURSOR; return create_token(RELOP, cur_line, *start_pos, *end_pos); }
+     math { *end_pos = YYCURSOR; return create_token(MATH, cur_line, *start_pos, *end_pos); }
+     number { *end_pos = YYCURSOR; return create_token(NUMBER, cur_line, *start_pos, *end_pos); }
+     date { *end_pos = YYCURSOR; return create_token(DATE, cur_line, *start_pos, *end_pos); }
+     literal { *end_pos = YYCURSOR; return create_token(LITERAL, cur_line, *start_pos, *end_pos); }
+     preprocessor { *end_pos = YYCURSOR; return create_token(PREPROCESSOR, cur_line, *start_pos, *end_pos); }
+     area { *end_pos = YYCURSOR; return create_token(AREA, cur_line, *start_pos, *end_pos); }
+     id { *end_pos = YYCURSOR; return create_token(ID, cur_line, *start_pos, *end_pos); }
+     $ { *end_pos = YYCURSOR; return create_token(END, cur_line, *start_pos, *end_pos); }
+     *  { *end_pos = YYCURSOR; return create_token(ERROR, cur_line, *start_pos, *end_pos); }
    */
 #pragma GCC diagnostic pop
 }
@@ -194,7 +266,6 @@ main (int argc, char **argv)
 
   struct stat statbuf;
   int fd, fd_log;
-  char buf[BUFFSIZE] = { 0 };
 
   if ((fd = open (argv[1], O_RDONLY)) < 0)
     print_error ("невозможно открыть %s для чтения",
@@ -219,51 +290,22 @@ main (int argc, char **argv)
   const char *limit = (const char *) src + statbuf.st_size;
   const char *start_pos = (const char *) src;
   const char *end_pos = NULL;
-  enum TAG res = ERROR;
-  size_t n = 0, line = 1;
+  token *tok = NULL;
+  size_t line = 1;
 
+  init_lex ();
   do
     {
-      res = lex (&start_pos, &end_pos, limit);
-      n = end_pos - start_pos;
-      assert (n < BUFFSIZE);
-      if (res == NEWLINE)
-	{
-	  line += n;
-	}
-      else
-	{
-	  memcpy (buf, start_pos, n);
-	  buf[n] = '\0';
-	  if (res == ID)
-	    {
-	      gchar *buf_upper = g_utf8_strup (buf, n);
-	      n = strlen (buf_upper);
-	      assert (n < BUFFSIZE);
-	      memcpy (buf, buf_upper, n);
-	      buf_upper[n] = '\0';
-	      g_free (buf_upper);
-	    }
+      tok = lex (&start_pos, &end_pos, limit, line);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
-	  dprintf (fd_log, "%ld:%s\nres:%d\n", line, buf, res);
+      dprintf (fd_log, "%ld:%s\nres:%d\n", tok->line, tok->text, tok->tag);
 #pragma GCC diagnostic pop
-	  if (res == LITERAL)
-	    {
-	      const char *ptr_literal = buf;
-	      while (*ptr_literal)
-		{
-		  if (*ptr_literal == '\n')
-		    {
-		      line++;
-		    }
-		  ptr_literal++;
-		}
-	    }
-	}
       start_pos = end_pos;
+      line = tok->line;
     }
   while (start_pos != limit);
   munmap (src, statbuf.st_size);
+  destroy_lex ();
   return EXIT_SUCCESS;
 }
