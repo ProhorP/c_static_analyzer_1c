@@ -113,15 +113,15 @@ struct entry_token
 entry_token *head_token = NULL;
 GHashTable *symbol_table = NULL;
 char buf_str[BUFFSIZE] = { 0 };
+size_t line = 1;
 
 token *
-create_token (const enum TAG tag, const enum TAG_ATTR attr, const size_t line,
+create_token (const enum TAG tag, const enum TAG_ATTR attr, 
 	      const char *start_pos, const char *end_pos)
 {
   gpointer lexeme = NULL;
   size_t n = end_pos - start_pos;
   enum TAG_ATTR cur_attr = attr;
-  size_t cur_line = line;
 
   assert (n < BUFFSIZE);
 
@@ -160,7 +160,7 @@ create_token (const enum TAG tag, const enum TAG_ATTR attr, const size_t line,
 	{
 	  if (*ptr_literal == '\n')
 	    {
-	      cur_line++;
+	      line++;
 	    }
 	  ptr_literal++;
 	}
@@ -172,7 +172,6 @@ create_token (const enum TAG tag, const enum TAG_ATTR attr, const size_t line,
 
   new_token->token.tag = tag;
   new_token->token.attr = cur_attr;
-  new_token->token.line = cur_line;
   new_token->token.text = lexeme;
 
   return &(new_token->token);
@@ -200,6 +199,7 @@ destroy_lex ()
   g_hash_table_destroy (symbol_table);
   head_token = NULL;
   symbol_table = NULL;
+line = 1;
 }
 
 void
@@ -215,11 +215,10 @@ print_error (const char *format, ...)
 /*!include:re2c "unicode_categories.re" */
 
 token *
-lex (const char **start_pos, const char **end_pos, const char *limit,
-     size_t line)
+lex (const char **start_pos, const char **end_pos, const char *limit
+     )
 {
   const char *YYCURSOR = *start_pos, *YYLIMIT = limit, *YYMARKER;
-  size_t cur_line = line;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 loop:
@@ -260,35 +259,35 @@ loop:
      id = [^'"\.,;()\[\] \t\n=<>+\-*\/%&#]+;
 
      comment { *start_pos = YYCURSOR; goto loop; }
-     point { *end_pos = YYCURSOR; return create_token(POINT, EMPTY, cur_line, *start_pos, *end_pos); }
-     comma { *end_pos = YYCURSOR; return create_token(COMMA, EMPTY, cur_line, *start_pos, *end_pos); }
-     semicolon { *end_pos = YYCURSOR; return create_token(SEMICOLON, EMPTY, cur_line, *start_pos, *end_pos); }
-     left_parenthesis { *end_pos = YYCURSOR; return create_token(LEFT_PARENTHESIS, EMPTY, cur_line, *start_pos, *end_pos); }
-     right_parenthesis { *end_pos = YYCURSOR; return create_token(RIGHT_PARENTHESIS, EMPTY, cur_line, *start_pos, *end_pos); }
-     left_square_bracket { *end_pos = YYCURSOR; return create_token(LEFT_SQUARE_BRACKET, EMPTY, cur_line, *start_pos, *end_pos); }
-     right_square_bracket { *end_pos = YYCURSOR; return create_token(RIGHT_SQUARE_BRACKET, EMPTY, cur_line, *start_pos, *end_pos); }
-     whitespace { *end_pos = YYCURSOR; return create_token(WHITESPACE, EMPTY, cur_line, *start_pos, *end_pos); }
-     tab { *end_pos = YYCURSOR; return create_token(TAB, EMPTY, cur_line, *start_pos, *end_pos); }
-     newline { cur_line += YYCURSOR - *start_pos ; *start_pos = YYCURSOR; goto loop; }
-     lt { *end_pos = YYCURSOR; return create_token(RELOP, LT, cur_line, *start_pos, *end_pos); }
-     le { *end_pos = YYCURSOR; return create_token(RELOP, LE, cur_line, *start_pos, *end_pos); }
-     eq { *end_pos = YYCURSOR; return create_token(RELOP, EQ, cur_line, *start_pos, *end_pos); }
-     ne { *end_pos = YYCURSOR; return create_token(RELOP, NE, cur_line, *start_pos, *end_pos); }
-     gt { *end_pos = YYCURSOR; return create_token(RELOP, GT, cur_line, *start_pos, *end_pos); }
-     ge { *end_pos = YYCURSOR; return create_token(RELOP, GE, cur_line, *start_pos, *end_pos); }
-     plus { *end_pos = YYCURSOR; return create_token(MATH, PLUS, cur_line, *start_pos, *end_pos); }
-     minus { *end_pos = YYCURSOR; return create_token(MATH, MINUS, cur_line, *start_pos, *end_pos); }
-     multiply { *end_pos = YYCURSOR; return create_token(MATH, MULTIPLY, cur_line, *start_pos, *end_pos); }
-     division { *end_pos = YYCURSOR; return create_token(MATH, DIVISION, cur_line, *start_pos, *end_pos); }
-     remainder_of_division { *end_pos = YYCURSOR; return create_token(MATH, REMAINDER_OF_DIVISION, cur_line, *start_pos, *end_pos); }
-     number { *end_pos = YYCURSOR; return create_token(NUMBER, PTR, cur_line, *start_pos, *end_pos); }
-     date { *end_pos = YYCURSOR; return create_token(DATE, PTR, cur_line, *start_pos, *end_pos); }
-     literal { *end_pos = YYCURSOR; return create_token(LITERAL, PTR, cur_line, *start_pos, *end_pos); }
-     preprocessor { *end_pos = YYCURSOR; return create_token(PREPROCESSOR, PTR, cur_line, *start_pos, *end_pos); }
-     area { *end_pos = YYCURSOR; return create_token(AREA, PTR, cur_line, *start_pos, *end_pos); }
-     id { *end_pos = YYCURSOR; return create_token(ID, PTR, cur_line, *start_pos, *end_pos); }
-     $ { *end_pos = YYCURSOR; return create_token(END, EMPTY, cur_line, *start_pos, *end_pos); }
-     *  { *end_pos = YYCURSOR; return create_token(ERROR, EMPTY, cur_line, *start_pos, *end_pos); }
+     point { *end_pos = YYCURSOR; return create_token(POINT, EMPTY, *start_pos, *end_pos); }
+     comma { *end_pos = YYCURSOR; return create_token(COMMA, EMPTY, *start_pos, *end_pos); }
+     semicolon { *end_pos = YYCURSOR; return create_token(SEMICOLON, EMPTY, *start_pos, *end_pos); }
+     left_parenthesis { *end_pos = YYCURSOR; return create_token(LEFT_PARENTHESIS, EMPTY, *start_pos, *end_pos); }
+     right_parenthesis { *end_pos = YYCURSOR; return create_token(RIGHT_PARENTHESIS, EMPTY, *start_pos, *end_pos); }
+     left_square_bracket { *end_pos = YYCURSOR; return create_token(LEFT_SQUARE_BRACKET, EMPTY, *start_pos, *end_pos); }
+     right_square_bracket { *end_pos = YYCURSOR; return create_token(RIGHT_SQUARE_BRACKET, EMPTY, *start_pos, *end_pos); }
+     whitespace { *end_pos = YYCURSOR; return create_token(WHITESPACE, EMPTY, *start_pos, *end_pos); }
+     tab { *end_pos = YYCURSOR; return create_token(TAB, EMPTY, *start_pos, *end_pos); }
+     newline { line += YYCURSOR - *start_pos ; *start_pos = YYCURSOR; goto loop; }
+     lt { *end_pos = YYCURSOR; return create_token(RELOP, LT, *start_pos, *end_pos); }
+     le { *end_pos = YYCURSOR; return create_token(RELOP, LE, *start_pos, *end_pos); }
+     eq { *end_pos = YYCURSOR; return create_token(RELOP, EQ, *start_pos, *end_pos); }
+     ne { *end_pos = YYCURSOR; return create_token(RELOP, NE, *start_pos, *end_pos); }
+     gt { *end_pos = YYCURSOR; return create_token(RELOP, GT, *start_pos, *end_pos); }
+     ge { *end_pos = YYCURSOR; return create_token(RELOP, GE, *start_pos, *end_pos); }
+     plus { *end_pos = YYCURSOR; return create_token(MATH, PLUS, *start_pos, *end_pos); }
+     minus { *end_pos = YYCURSOR; return create_token(MATH, MINUS, *start_pos, *end_pos); }
+     multiply { *end_pos = YYCURSOR; return create_token(MATH, MULTIPLY, *start_pos, *end_pos); }
+     division { *end_pos = YYCURSOR; return create_token(MATH, DIVISION, *start_pos, *end_pos); }
+     remainder_of_division { *end_pos = YYCURSOR; return create_token(MATH, REMAINDER_OF_DIVISION, *start_pos, *end_pos); }
+     number { *end_pos = YYCURSOR; return create_token(NUMBER, PTR, *start_pos, *end_pos); }
+     date { *end_pos = YYCURSOR; return create_token(DATE, PTR, *start_pos, *end_pos); }
+     literal { *end_pos = YYCURSOR; return create_token(LITERAL, PTR, *start_pos, *end_pos); }
+     preprocessor { *end_pos = YYCURSOR; return create_token(PREPROCESSOR, PTR, *start_pos, *end_pos); }
+     area { *end_pos = YYCURSOR; return create_token(AREA, PTR, *start_pos, *end_pos); }
+     id { *end_pos = YYCURSOR; return create_token(ID, PTR, *start_pos, *end_pos); }
+     $ { *end_pos = YYCURSOR; return create_token(END, EMPTY, *start_pos, *end_pos); }
+     *  { *end_pos = YYCURSOR; return create_token(ERROR, EMPTY, *start_pos, *end_pos); }
    */
 #pragma GCC diagnostic pop
 }
@@ -328,26 +327,24 @@ main (int argc, char **argv)
   const char *start_pos = (const char *) src;
   const char *end_pos = NULL;
   token *tok = NULL;
-  size_t line = 1;
 
   init_lex ();
   do
     {
-      tok = lex (&start_pos, &end_pos, limit, line);
+      tok = lex (&start_pos, &end_pos, limit);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
 if (tok->attr == EMPTY)
-      dprintf (fd_log, "%ld(%s)\n", tok->line, 
+      dprintf (fd_log, "%ld(%s)\n", line, 
 	       tag_text[tok->tag]);
 else if (tok->attr == PTR)
-      dprintf (fd_log, "%ld(%s):%s\n", tok->line, tag_text[tok->tag], tok->text
+      dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag], tok->text
 	       );
 else
-      dprintf (fd_log, "%ld(%s):%s\n", tok->line, tag_text[tok->tag], tag_attr_text[tok->attr]
+      dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag], tag_attr_text[tok->attr]
 	       );
 #pragma GCC diagnostic pop
       start_pos = end_pos;
-      line = tok->line;
     }
   while (start_pos != limit);
   munmap (src, statbuf.st_size);
