@@ -311,6 +311,22 @@ loop:
 #pragma GCC diagnostic pop
 }
 
+void
+print_token (token * tok, int fd_log)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
+  if (tok->tag < RELOP)
+    dprintf (fd_log, "%ld(%s)\n", line, tag_text[tok->tag]);
+  else if (tok->tag < NUMBER)
+    dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
+	     tag_attr_text[((token_attr *) tok)->attr]);
+  else
+    dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
+	     ((token_table *) tok)->text);
+#pragma GCC diagnostic pop
+}
+
 int
 main (int argc, char **argv)
 {
@@ -351,17 +367,7 @@ main (int argc, char **argv)
   do
     {
       tok = lex (&start_pos, &end_pos, limit);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
-      if (tok->tag < RELOP)
-	dprintf (fd_log, "%ld(%s)\n", line, tag_text[tok->tag]);
-      else if (tok->tag < NUMBER)
-	dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
-		 tag_attr_text[((token_attr *) tok)->attr]);
-      else
-	dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
-		 ((token_table *) tok)->text);
-#pragma GCC diagnostic pop
+      print_token (tok, fd_log);
       start_pos = end_pos;
     }
   while (start_pos != limit);
