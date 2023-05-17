@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <glib.h>
 #include <glib/gprintf.h>
+#include <stdbool.h>
 
 #define BUFFSIZE 409600
 enum TAG
@@ -63,94 +64,120 @@ char *tag_text[] = {
 
 enum TAG_ATTR
 {
-  EMPTY				//0
-    , PTR			//1
-    , LT			//2
-    , LE			//3
-    , EQ			//4
-    , NE			//5
-    , GT			//6
-    , GE			//7
-    , PLUS			//8
-    , MINUS			//9
-    , MULTIPLY			//10
-    , DIVISION			//11
-    , REMAINDER_OF_DIVISION	//12
+  LT				//0
+    , LE			//1
+    , EQ			//2
+    , NE			//3
+    , GT			//4
+    , GE			//5
+    , PLUS			//6
+    , MINUS			//7
+    , MULTIPLY			//8
+    , DIVISION			//9
+    , REMAINDER_OF_DIVISION	//10
 };
 
 char *tag_attr_text[] = {
-  "EMPTY"			//0
-    , "PTR"			//1
-    , "<"			//2
-    , "<="			//3
-    , "="			//4
-    , "<>"			//5
-    , ">"			//6
-    , ">="			//7
-    , "+"			//8
-    , "-"			//9
-    , "*"			//10
-    , "/"			//11
-    , "%"			//12
+  "<"				//0
+    , "<="			//1
+    , "="			//2
+    , "<>"			//3
+    , ">"			//4
+    , ">="			//5
+    , "+"			//6
+    , "-"			//7
+    , "*"			//8
+    , "/"			//9
+    , "%"			//10
 };
 
 typedef struct
 {
   enum TAG tag;
-  enum TAG_ATTR attr;
-  size_t line;
-  char *text;
 } token;
 
-typedef struct entry_token entry_token;
-
-struct entry_token
+typedef struct
 {
-  entry_token *next;
-  token token;
+  token base;
+  enum TAG_ATTR attr;
+} token_attr;
+
+typedef struct
+{
+  token base;
+  char *text;
+} token_table;
+
+token tokens[] = {
+  {ERROR}			//0
+  , {END}			//1
+  , {TEST}			//2
+  , {POINT}			//3
+  , {COMMA}			//4
+  , {SEMICOLON}			//5
+  , {LEFT_PARENTHESIS}		//6
+  , {RIGHT_PARENTHESIS}		//7
+  , {LEFT_SQUARE_BRACKET}	//8
+  , {RIGHT_SQUARE_BRACKET}	//9
+  , {WHITESPACE}		//10
+  , {TAB}			//11
+  , {NEWLINE}			//12
 };
 
-entry_token *head_token = NULL;
+token_attr tokens_attr[] = {
+  {{RELOP}, LT}			//0
+  , {{RELOP}, LE}		//1
+  , {{RELOP}, EQ}		//2
+  , {{RELOP}, NE}		//3
+  , {{RELOP}, GT}		//4
+  , {{RELOP}, GE}		//5
+  , {{MATH}, PLUS}		//6
+  , {{MATH}, MINUS}		//7
+  , {{MATH}, MULTIPLY}		//8
+  , {{MATH}, DIVISION}		//9
+  , {{MATH}, REMAINDER_OF_DIVISION}	//10
+};
+
 GHashTable *symbol_table = NULL;
 char buf_str[BUFFSIZE] = { 0 };
+
 size_t line = 1;
 
-token *
-create_token (const enum TAG tag, const enum TAG_ATTR attr, 
-	      const char *start_pos, const char *end_pos)
+void
+print_error (const char *format, ...)
 {
-  gpointer lexeme = NULL;
+  va_list argptr;
+  va_start (argptr, format);
+  vprintf (format, argptr);
+  va_end (argptr);
+  exit (EXIT_FAILURE);
+}
+
+token_table *
+create_token_table (const enum TAG tag, const char *start_pos,
+		    const char *end_pos)
+{
+  token_table *cur_token = NULL;
   size_t n = end_pos - start_pos;
-  enum TAG_ATTR cur_attr = attr;
+  char *lexeme_upper = NULL;
 
   assert (n < BUFFSIZE);
 
-  if (tag == ID || tag == PREPROCESSOR || tag == AREA)
-    {
-      gchar *lexeme_find = g_utf8_strup (start_pos, n);
-      lexeme = g_hash_table_lookup (symbol_table, lexeme_find);
-
-      if (lexeme != NULL)
-	g_free (lexeme_find);
-      else
-	{
-	  lexeme = (gpointer) calloc (1, n + 1);
-	  memcpy (lexeme, start_pos, n);
-	  g_hash_table_insert (symbol_table, lexeme_find, lexeme);
-	}
-    }
-  else if (tag == NUMBER || tag == DATE || tag == LITERAL)
+  if (tag < PREPROCESSOR)
+/*if (tag == NUMBER || tag == DATE || tag == LITERAL)*/
     {
       memcpy (buf_str, start_pos, n);
       buf_str[n] = '\0';
+      cur_token = g_hash_table_lookup (symbol_table, buf_str);
+    }
+  else
+/*if (tag == PREPROCESSOR || tag == AREA || tag == ID)*/
+    {
+      lexeme_upper = g_utf8_strup (start_pos, n);
+      cur_token = g_hash_table_lookup (symbol_table, lexeme_upper);
 
-      lexeme = g_hash_table_lookup (symbol_table, buf_str);
-
-      if (lexeme == NULL)
-	{
-	  lexeme = g_strdup (buf_str);
-	  g_hash_table_insert (symbol_table, g_strdup (lexeme), lexeme);
-	}
+      if (cur_token != NULL)
+	g_free (lexeme_upper);
     }
 
   if (tag == LITERAL)
@@ -166,15 +193,26 @@ create_token (const enum TAG tag, const enum TAG_ATTR attr,
 	}
     }
 
-  entry_token *new_token = (entry_token *) malloc (sizeof (entry_token));
-  new_token->next = head_token;
-  head_token = new_token;
+  if (cur_token == NULL)
+    {
+      cur_token = (token_table *) calloc (1, sizeof (token_table) + n + 1);
 
-  new_token->token.tag = tag;
-  new_token->token.attr = cur_attr;
-  new_token->token.text = lexeme;
+      if (cur_token == NULL)
+	print_error
+	  ("Не удалось выделить память под элемент таблицы");
 
-  return &(new_token->token);
+      cur_token->base.tag = tag;
+      cur_token->text = (char *) cur_token + sizeof (token_table);
+
+      memcpy (cur_token->text, start_pos, n);
+
+      if (lexeme_upper)
+	g_hash_table_insert (symbol_table, lexeme_upper, cur_token);
+      else
+	g_hash_table_insert (symbol_table, g_strdup (buf_str), cur_token);
+    }
+
+  return cur_token;
 
 }
 
@@ -188,35 +226,16 @@ init_lex ()
 void
 destroy_lex ()
 {
-  entry_token *temp = head_token, *next;
-  while (temp != NULL)
-    {
-      next = temp->next;
-      free (temp);
-      temp = next;
-    }
-
   g_hash_table_destroy (symbol_table);
-  head_token = NULL;
   symbol_table = NULL;
-line = 1;
+  line = 1;
 }
 
-void
-print_error (const char *format, ...)
-{
-  va_list argptr;
-  va_start (argptr, format);
-  vprintf (format, argptr);
-  va_end (argptr);
-  exit (EXIT_FAILURE);
-}
 
 /*!include:re2c "unicode_categories.re" */
 
 token *
-lex (const char **start_pos, const char **end_pos, const char *limit
-     )
+lex (const char **start_pos, const char **end_pos, const char *limit)
 {
   const char *YYCURSOR = *start_pos, *YYLIMIT = limit, *YYMARKER;
 #pragma GCC diagnostic push
@@ -259,35 +278,35 @@ loop:
      id = [^'"\.,;()\[\] \t\n=<>+\-*\/%&#]+;
 
      comment { *start_pos = YYCURSOR; goto loop; }
-     point { *end_pos = YYCURSOR; return create_token(POINT, EMPTY, *start_pos, *end_pos); }
-     comma { *end_pos = YYCURSOR; return create_token(COMMA, EMPTY, *start_pos, *end_pos); }
-     semicolon { *end_pos = YYCURSOR; return create_token(SEMICOLON, EMPTY, *start_pos, *end_pos); }
-     left_parenthesis { *end_pos = YYCURSOR; return create_token(LEFT_PARENTHESIS, EMPTY, *start_pos, *end_pos); }
-     right_parenthesis { *end_pos = YYCURSOR; return create_token(RIGHT_PARENTHESIS, EMPTY, *start_pos, *end_pos); }
-     left_square_bracket { *end_pos = YYCURSOR; return create_token(LEFT_SQUARE_BRACKET, EMPTY, *start_pos, *end_pos); }
-     right_square_bracket { *end_pos = YYCURSOR; return create_token(RIGHT_SQUARE_BRACKET, EMPTY, *start_pos, *end_pos); }
-     whitespace { *end_pos = YYCURSOR; return create_token(WHITESPACE, EMPTY, *start_pos, *end_pos); }
-     tab { *end_pos = YYCURSOR; return create_token(TAB, EMPTY, *start_pos, *end_pos); }
+     point { *end_pos = YYCURSOR; return &(tokens[POINT]); }
+     comma { *end_pos = YYCURSOR; return &(tokens[COMMA]); }
+     semicolon { *end_pos = YYCURSOR; return &(tokens[SEMICOLON]); }
+     left_parenthesis { *end_pos = YYCURSOR; return &(tokens[LEFT_PARENTHESIS]); }
+     right_parenthesis { *end_pos = YYCURSOR; return &(tokens[RIGHT_PARENTHESIS]); }
+     left_square_bracket { *end_pos = YYCURSOR; return &(tokens[LEFT_SQUARE_BRACKET]); }
+     right_square_bracket { *end_pos = YYCURSOR; return &(tokens[RIGHT_SQUARE_BRACKET]); }
+     whitespace { *end_pos = YYCURSOR; return &(tokens[WHITESPACE]); }
+     tab { *end_pos = YYCURSOR; return &(tokens[TAB]); }
      newline { line += YYCURSOR - *start_pos ; *start_pos = YYCURSOR; goto loop; }
-     lt { *end_pos = YYCURSOR; return create_token(RELOP, LT, *start_pos, *end_pos); }
-     le { *end_pos = YYCURSOR; return create_token(RELOP, LE, *start_pos, *end_pos); }
-     eq { *end_pos = YYCURSOR; return create_token(RELOP, EQ, *start_pos, *end_pos); }
-     ne { *end_pos = YYCURSOR; return create_token(RELOP, NE, *start_pos, *end_pos); }
-     gt { *end_pos = YYCURSOR; return create_token(RELOP, GT, *start_pos, *end_pos); }
-     ge { *end_pos = YYCURSOR; return create_token(RELOP, GE, *start_pos, *end_pos); }
-     plus { *end_pos = YYCURSOR; return create_token(MATH, PLUS, *start_pos, *end_pos); }
-     minus { *end_pos = YYCURSOR; return create_token(MATH, MINUS, *start_pos, *end_pos); }
-     multiply { *end_pos = YYCURSOR; return create_token(MATH, MULTIPLY, *start_pos, *end_pos); }
-     division { *end_pos = YYCURSOR; return create_token(MATH, DIVISION, *start_pos, *end_pos); }
-     remainder_of_division { *end_pos = YYCURSOR; return create_token(MATH, REMAINDER_OF_DIVISION, *start_pos, *end_pos); }
-     number { *end_pos = YYCURSOR; return create_token(NUMBER, PTR, *start_pos, *end_pos); }
-     date { *end_pos = YYCURSOR; return create_token(DATE, PTR, *start_pos, *end_pos); }
-     literal { *end_pos = YYCURSOR; return create_token(LITERAL, PTR, *start_pos, *end_pos); }
-     preprocessor { *end_pos = YYCURSOR; return create_token(PREPROCESSOR, PTR, *start_pos, *end_pos); }
-     area { *end_pos = YYCURSOR; return create_token(AREA, PTR, *start_pos, *end_pos); }
-     id { *end_pos = YYCURSOR; return create_token(ID, PTR, *start_pos, *end_pos); }
-     $ { *end_pos = YYCURSOR; return create_token(END, EMPTY, *start_pos, *end_pos); }
-     *  { *end_pos = YYCURSOR; return create_token(ERROR, EMPTY, *start_pos, *end_pos); }
+     lt { *end_pos = YYCURSOR; return (token *) &(tokens_attr[LT]); }
+     le { *end_pos = YYCURSOR; return (token *) &(tokens_attr[LE]); }
+     eq { *end_pos = YYCURSOR; return (token *) &(tokens_attr[EQ]); }
+     ne { *end_pos = YYCURSOR; return (token *) &(tokens_attr[NE]); }
+     gt { *end_pos = YYCURSOR; return (token *) &(tokens_attr[GT]); }
+     ge { *end_pos = YYCURSOR; return (token *) &(tokens_attr[GE]); }
+     plus { *end_pos = YYCURSOR; return (token *) &(tokens_attr[PLUS]); }
+     minus { *end_pos = YYCURSOR; return (token *) &(tokens_attr[MINUS]); }
+     multiply { *end_pos = YYCURSOR; return (token *) &(tokens_attr[MULTIPLY]); }
+     division { *end_pos = YYCURSOR; return (token *) &(tokens_attr[DIVISION]); }
+     remainder_of_division { *end_pos = YYCURSOR; return (token *) &(tokens_attr[REMAINDER_OF_DIVISION]); }
+     number { *end_pos = YYCURSOR; return (token *) create_token_table(NUMBER, *start_pos, *end_pos); }
+     date { *end_pos = YYCURSOR; return (token *) create_token_table(DATE, *start_pos, *end_pos); }
+     literal { *end_pos = YYCURSOR; return (token *) create_token_table(LITERAL, *start_pos, *end_pos); }
+     preprocessor { *end_pos = YYCURSOR; return (token *) create_token_table(PREPROCESSOR, *start_pos, *end_pos); }
+     area { *end_pos = YYCURSOR; return (token *) create_token_table(AREA, *start_pos, *end_pos); }
+     id { *end_pos = YYCURSOR; return (token *) create_token_table(ID, *start_pos, *end_pos); }
+     $ { *end_pos = YYCURSOR; return &(tokens[END]); }
+     *  { *end_pos = YYCURSOR; return &(tokens[ERROR]); }
    */
 #pragma GCC diagnostic pop
 }
@@ -334,15 +353,14 @@ main (int argc, char **argv)
       tok = lex (&start_pos, &end_pos, limit);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
-if (tok->attr == EMPTY)
-      dprintf (fd_log, "%ld(%s)\n", line, 
-	       tag_text[tok->tag]);
-else if (tok->attr == PTR)
-      dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag], tok->text
-	       );
-else
-      dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag], tag_attr_text[tok->attr]
-	       );
+      if (tok->tag < RELOP)
+	dprintf (fd_log, "%ld(%s)\n", line, tag_text[tok->tag]);
+      else if (tok->tag < NUMBER)
+	dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
+		 tag_attr_text[((token_attr *) tok)->attr]);
+      else
+	dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
+		 ((token_table *) tok)->text);
 #pragma GCC diagnostic pop
       start_pos = end_pos;
     }
