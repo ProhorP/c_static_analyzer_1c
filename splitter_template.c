@@ -28,14 +28,18 @@ enum TAG
     , WHITESPACE		//10
     , TAB			//11
     , NEWLINE			//12
-    , RELOP			//13
-    , MATH			//14
-    , NUMBER			//15
-    , DATE			//16
-    , LITERAL			//17
-    , PREPROCESSOR		//18
-    , AREA			//19
-    , ID			//20
+    , IF			//13
+    , THEN			//14
+    , ELSE			//15
+    , ENDIF			//16
+    , RELOP			//
+    , MATH			//
+    , NUMBER			//
+    , DATE			//
+    , LITERAL			//
+    , PREPROCESSOR		//
+    , AREA			//
+    , ID			//
 };
 
 char *tag_text[] = {
@@ -52,14 +56,18 @@ char *tag_text[] = {
     , "WHITESPACE"		//10
     , "TAB"			//11
     , "NEWLINE"			//12
-    , "RELOP"			//13
-    , "MATH"			//14
-    , "NUMBER"			//15
-    , "DATE"			//16
-    , "LITERAL"			//17
-    , "PREPROCESSOR"		//18
-    , "AREA"			//19
-    , "ID"			//20
+    , "IF"			//13
+    , "THEN"			//14
+    , "ELSE"			//15
+    , "ENDIF"			//16
+    , "RELOP"			//
+    , "MATH"			//
+    , "NUMBER"			//
+    , "DATE"			//
+    , "LITERAL"			//
+    , "PREPROCESSOR"		//
+    , "AREA"			//
+    , "ID"			//
 };
 
 enum TAG_ATTR
@@ -122,6 +130,10 @@ token tokens[] = {
   , {WHITESPACE}		//10
   , {TAB}			//11
   , {NEWLINE}			//12
+  , {IF}			//13
+  , {THEN}			//14
+  , {ELSE}			//15
+  , {ENDIF}			//16
 };
 
 token_attr tokens_attr[] = {
@@ -138,7 +150,7 @@ token_attr tokens_attr[] = {
   , {{MATH}, REMAINDER_OF_DIVISION}	//10
 };
 
-GHashTable *symbol_table = NULL;
+GHashTable *symbol_table = NULL, *reserve_symbol_table = NULL;
 char buf_str[BUFFSIZE] = { 0 };
 
 int fd = 0;
@@ -180,7 +192,12 @@ create_token_table (const enum TAG tag)
 /*if (tag == PREPROCESSOR || tag == AREA || tag == ID)*/
     {
       lexeme_upper = g_utf8_strup (start_pos, n);
-      cur_token = g_hash_table_lookup (symbol_table, lexeme_upper);
+
+      if (tag == ID)
+	cur_token = g_hash_table_lookup (reserve_symbol_table, lexeme_upper);
+
+      if (cur_token == NULL)
+	cur_token = g_hash_table_lookup (symbol_table, lexeme_upper);
 
       if (cur_token != NULL)
 	g_free (lexeme_upper);
@@ -190,13 +207,8 @@ create_token_table (const enum TAG tag)
     {
       const char *ptr_literal = start_pos;
       while (ptr_literal != end_pos)
-	{
-	  if (*ptr_literal == '\n')
-	    {
-	      line++;
-	    }
-	  ptr_literal++;
-	}
+	if (*ptr_literal++ == '\n')
+	  line++;
     }
 
   if (cur_token == NULL)
@@ -223,6 +235,18 @@ create_token_table (const enum TAG tag)
 }
 
 void
+fill_reserve_symbol_table ()
+{
+
+  g_hash_table_insert (reserve_symbol_table, "ЕСЛИ", &(tokens[IF]));
+  g_hash_table_insert (reserve_symbol_table, "ТОГДА", &(tokens[THEN]));
+  g_hash_table_insert (reserve_symbol_table, "ИНАЧЕ", &(tokens[ELSE]));
+  g_hash_table_insert (reserve_symbol_table, "КОНЕЦЕСЛИ",
+		       &(tokens[ENDIF]));
+
+}
+
+void
 init_lex (char *file_name)
 {
   if ((fd = open (file_name, O_RDONLY)) < 0)
@@ -244,14 +268,20 @@ init_lex (char *file_name)
   end_pos = NULL;
   symbol_table =
     g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
+  reserve_symbol_table = g_hash_table_new (g_str_hash, g_str_equal);
+  fill_reserve_symbol_table ();
 }
+
 
 void
 destroy_lex ()
 {
   munmap (src, statbuf.st_size);
   g_hash_table_destroy (symbol_table);
+  g_hash_table_destroy (reserve_symbol_table);
   symbol_table = NULL;
+  reserve_symbol_table = NULL;
   line = 1;
 }
 
