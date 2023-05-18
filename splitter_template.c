@@ -141,6 +141,13 @@ token_attr tokens_attr[] = {
 GHashTable *symbol_table = NULL;
 char buf_str[BUFFSIZE] = { 0 };
 
+int fd = 0;
+struct stat statbuf = { 0 };
+
+void *src = NULL;
+const char *start_pos = NULL;
+const char *end_pos = NULL;
+const char *limit = NULL;
 size_t line = 1;
 
 void
@@ -154,8 +161,7 @@ print_error (const char *format, ...)
 }
 
 token_table *
-create_token_table (const enum TAG tag, const char *start_pos,
-		    const char *end_pos)
+create_token_table (const enum TAG tag)
 {
   token_table *cur_token = NULL;
   size_t n = end_pos - start_pos;
@@ -217,8 +223,25 @@ create_token_table (const enum TAG tag, const char *start_pos,
 }
 
 void
-init_lex ()
+init_lex (char *file_name)
 {
+  if ((fd = open (file_name, O_RDONLY)) < 0)
+    print_error ("невозможно открыть %s для чтения",
+		 file_name);
+
+  if (fstat (fd, &statbuf) < 0)
+    print_error
+      ("Ошибка вызова функции fstat:%s у файла %s\n",
+       strerror (errno), file_name);
+
+  if ((src =
+       mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED)
+    print_error ("%s\n",
+		 "Ошибка вызова функции mmap для входного файла");
+
+  limit = (const char *) src + statbuf.st_size;
+  start_pos = (const char *) src;
+  end_pos = NULL;
   symbol_table =
     g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 }
@@ -226,6 +249,7 @@ init_lex ()
 void
 destroy_lex ()
 {
+  munmap (src, statbuf.st_size);
   g_hash_table_destroy (symbol_table);
   symbol_table = NULL;
   line = 1;
@@ -235,12 +259,19 @@ destroy_lex ()
 /*!include:re2c "unicode_categories.re" */
 
 token *
-lex (const char **start_pos, const char **end_pos, const char *limit)
+lex ()
 {
-  const char *YYCURSOR = *start_pos, *YYLIMIT = limit, *YYMARKER;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 loop:
+
+  if (end_pos)
+    start_pos = end_pos;
+
+  if (start_pos == limit)
+    return NULL;
+
+  const char *YYCURSOR = start_pos, *YYLIMIT = limit, *YYMARKER;
   /*!re2c
      re2c:define:YYCTYPE = 'unsigned char';
      re2c:yyfill:enable = 0;
@@ -277,36 +308,36 @@ loop:
      area = [#][^\n]+;
      id = [^'"\.,;()\[\] \t\n=<>+\-*\/%&#]+;
 
-     comment { *start_pos = YYCURSOR; goto loop; }
-     point { *end_pos = YYCURSOR; return &(tokens[POINT]); }
-     comma { *end_pos = YYCURSOR; return &(tokens[COMMA]); }
-     semicolon { *end_pos = YYCURSOR; return &(tokens[SEMICOLON]); }
-     left_parenthesis { *end_pos = YYCURSOR; return &(tokens[LEFT_PARENTHESIS]); }
-     right_parenthesis { *end_pos = YYCURSOR; return &(tokens[RIGHT_PARENTHESIS]); }
-     left_square_bracket { *end_pos = YYCURSOR; return &(tokens[LEFT_SQUARE_BRACKET]); }
-     right_square_bracket { *end_pos = YYCURSOR; return &(tokens[RIGHT_SQUARE_BRACKET]); }
-     whitespace { *end_pos = YYCURSOR; return &(tokens[WHITESPACE]); }
-     tab { *end_pos = YYCURSOR; return &(tokens[TAB]); }
-     newline { line += YYCURSOR - *start_pos ; *start_pos = YYCURSOR; goto loop; }
-     lt { *end_pos = YYCURSOR; return (token *) &(tokens_attr[LT]); }
-     le { *end_pos = YYCURSOR; return (token *) &(tokens_attr[LE]); }
-     eq { *end_pos = YYCURSOR; return (token *) &(tokens_attr[EQ]); }
-     ne { *end_pos = YYCURSOR; return (token *) &(tokens_attr[NE]); }
-     gt { *end_pos = YYCURSOR; return (token *) &(tokens_attr[GT]); }
-     ge { *end_pos = YYCURSOR; return (token *) &(tokens_attr[GE]); }
-     plus { *end_pos = YYCURSOR; return (token *) &(tokens_attr[PLUS]); }
-     minus { *end_pos = YYCURSOR; return (token *) &(tokens_attr[MINUS]); }
-     multiply { *end_pos = YYCURSOR; return (token *) &(tokens_attr[MULTIPLY]); }
-     division { *end_pos = YYCURSOR; return (token *) &(tokens_attr[DIVISION]); }
-     remainder_of_division { *end_pos = YYCURSOR; return (token *) &(tokens_attr[REMAINDER_OF_DIVISION]); }
-     number { *end_pos = YYCURSOR; return (token *) create_token_table(NUMBER, *start_pos, *end_pos); }
-     date { *end_pos = YYCURSOR; return (token *) create_token_table(DATE, *start_pos, *end_pos); }
-     literal { *end_pos = YYCURSOR; return (token *) create_token_table(LITERAL, *start_pos, *end_pos); }
-     preprocessor { *end_pos = YYCURSOR; return (token *) create_token_table(PREPROCESSOR, *start_pos, *end_pos); }
-     area { *end_pos = YYCURSOR; return (token *) create_token_table(AREA, *start_pos, *end_pos); }
-     id { *end_pos = YYCURSOR; return (token *) create_token_table(ID, *start_pos, *end_pos); }
-     $ { *end_pos = YYCURSOR; return &(tokens[END]); }
-     *  { *end_pos = YYCURSOR; return &(tokens[ERROR]); }
+     comment { end_pos = YYCURSOR; goto loop; }
+     point { end_pos = YYCURSOR; return &(tokens[POINT]); }
+     comma { end_pos = YYCURSOR; return &(tokens[COMMA]); }
+     semicolon { end_pos = YYCURSOR; return &(tokens[SEMICOLON]); }
+     left_parenthesis { end_pos = YYCURSOR; return &(tokens[LEFT_PARENTHESIS]); }
+     right_parenthesis { end_pos = YYCURSOR; return &(tokens[RIGHT_PARENTHESIS]); }
+     left_square_bracket { end_pos = YYCURSOR; return &(tokens[LEFT_SQUARE_BRACKET]); }
+     right_square_bracket { end_pos = YYCURSOR; return &(tokens[RIGHT_SQUARE_BRACKET]); }
+     whitespace { end_pos = YYCURSOR; return &(tokens[WHITESPACE]); }
+     tab { end_pos = YYCURSOR; return &(tokens[TAB]); }
+     newline { line += YYCURSOR - start_pos ; end_pos = YYCURSOR; goto loop; }
+     lt { end_pos = YYCURSOR; return (token *) &(tokens_attr[LT]); }
+     le { end_pos = YYCURSOR; return (token *) &(tokens_attr[LE]); }
+     eq { end_pos = YYCURSOR; return (token *) &(tokens_attr[EQ]); }
+     ne { end_pos = YYCURSOR; return (token *) &(tokens_attr[NE]); }
+     gt { end_pos = YYCURSOR; return (token *) &(tokens_attr[GT]); }
+     ge { end_pos = YYCURSOR; return (token *) &(tokens_attr[GE]); }
+     plus { end_pos = YYCURSOR; return (token *) &(tokens_attr[PLUS]); }
+     minus { end_pos = YYCURSOR; return (token *) &(tokens_attr[MINUS]); }
+     multiply { end_pos = YYCURSOR; return (token *) &(tokens_attr[MULTIPLY]); }
+     division { end_pos = YYCURSOR; return (token *) &(tokens_attr[DIVISION]); }
+     remainder_of_division { end_pos = YYCURSOR; return (token *) &(tokens_attr[REMAINDER_OF_DIVISION]); }
+     number { end_pos = YYCURSOR; return (token *) create_token_table(NUMBER); }
+     date { end_pos = YYCURSOR; return (token *) create_token_table(DATE); }
+     literal { end_pos = YYCURSOR; return (token *) create_token_table(LITERAL); }
+     preprocessor { end_pos = YYCURSOR; return (token *) create_token_table(PREPROCESSOR); }
+     area { end_pos = YYCURSOR; return (token *) create_token_table(AREA); }
+     id { end_pos = YYCURSOR; return (token *) create_token_table(ID); }
+     $ { end_pos = YYCURSOR; return &(tokens[END]); }
+     *  { end_pos = YYCURSOR; return &(tokens[ERROR]); }
    */
 #pragma GCC diagnostic pop
 }
@@ -335,43 +366,21 @@ main (int argc, char **argv)
     print_error ("%s",
 		 "Правильный формат:./a.out ./test/test01 ./log");
 
-  struct stat statbuf;
-  int fd, fd_log;
-
-  if ((fd = open (argv[1], O_RDONLY)) < 0)
-    print_error ("невозможно открыть %s для чтения",
-		 argv[1]);
+  int fd_log;
 
   if ((fd_log =
        open (argv[2], O_WRONLY | O_CREAT | O_APPEND, S_IWUSR | S_IRUSR)) < 0)
     print_error ("невозможно открыть %s для записи",
 		 argv[2]);
 
-  if (fstat (fd, &statbuf) < 0)
-    print_error
-      ("Ошибка вызова функции fstat:%s у файла %s\n",
-       strerror (errno), argv[1]);
-
-  void *src;
-  if ((src =
-       mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED)
-    print_error ("%s\n",
-		 "Ошибка вызова функции mmap для входного файла");
-
-  const char *limit = (const char *) src + statbuf.st_size;
-  const char *start_pos = (const char *) src;
-  const char *end_pos = NULL;
   token *tok = NULL;
 
-  init_lex ();
-  do
-    {
-      tok = lex (&start_pos, &end_pos, limit);
-      print_token (tok, fd_log);
-      start_pos = end_pos;
-    }
-  while (start_pos != limit);
-  munmap (src, statbuf.st_size);
+  init_lex (argv[1]);
+
+  while ((tok = lex ()))
+    print_token (tok, fd_log);
+
   destroy_lex ();
+
   return EXIT_SUCCESS;
 }

@@ -19,7 +19,7 @@ test01:
 	./a.out ./test/test01 ./log
 
 test02:
-	./a.out ./test/test02 ./log
+	./a.out ./test/Module.bsl ./log
 
 test03:
 	./a.out ./test/test03 ./log
@@ -28,7 +28,7 @@ test01_m:
 	valgrind --leak-check=full ./a.out ./test/test01 ./log
 
 test02_m:
-	valgrind --leak-check=full ./a.out ./test/test02 ./log
+	valgrind --leak-check=full ./a.out ./test/Module.bsl ./log
 
 test03_m:
 	valgrind --leak-check=full ./a.out ./test/test03 ./log
