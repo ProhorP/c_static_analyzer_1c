@@ -30,8 +30,18 @@ enum TAG
     , NEWLINE			//12
     , IF			//13
     , THEN			//14
-    , ELSE			//15
-    , ENDIF			//16
+    , ELSEIF			//15
+    , ELSE			//16
+    , ENDIF			//17
+    , FOR			//18
+    , EACH			//19
+    , OF			//20
+    , TO			//21
+    , WHILE			//22
+    , LOOP			//23
+    , BREAK			//24
+    , CONTINUE			//25
+    , ENDLOOP			//26
     , RELOP			//
     , MATH			//
     , NUMBER			//
@@ -58,8 +68,18 @@ char *tag_text[] = {
     , "NEWLINE"			//12
     , "IF"			//13
     , "THEN"			//14
-    , "ELSE"			//15
-    , "ENDIF"			//16
+    , "ELSEIF"			//15
+    , "ELSE"			//16
+    , "ENDIF"			//17
+    , "FOR"			//18
+    , "EACH"			//19
+    , "OF"			//20
+    , "TO"			//21
+    , "WHILE"			//22
+    , "LOOP"			//23
+    , "BREAK"			//24
+    , "CONTINUE"		//25
+    , "ENDLOOP"			//26
     , "RELOP"			//
     , "MATH"			//
     , "NUMBER"			//
@@ -130,10 +150,23 @@ token tokens[] = {
   , {WHITESPACE}		//10
   , {TAB}			//11
   , {NEWLINE}			//12
+
   , {IF}			//13
   , {THEN}			//14
-  , {ELSE}			//15
-  , {ENDIF}			//16
+  , {ELSEIF}			//15
+  , {ELSE}			//16
+  , {ENDIF}			//17
+
+  , {FOR}			//18
+  , {EACH}			//19
+  , {OF}			//20
+  , {TO}			//21
+  , {WHILE}			//22
+  , {LOOP}			//23
+  , {BREAK}			//24
+  , {CONTINUE}			//25
+  , {ENDLOOP}			//26
+
 };
 
 token_attr tokens_attr[] = {
@@ -240,9 +273,26 @@ fill_reserve_symbol_table ()
 
   g_hash_table_insert (reserve_symbol_table, "ЕСЛИ", &(tokens[IF]));
   g_hash_table_insert (reserve_symbol_table, "ТОГДА", &(tokens[THEN]));
+  g_hash_table_insert (reserve_symbol_table, "ИНАЧЕЕСЛИ",
+		       &(tokens[ELSEIF]));
   g_hash_table_insert (reserve_symbol_table, "ИНАЧЕ", &(tokens[ELSE]));
   g_hash_table_insert (reserve_symbol_table, "КОНЕЦЕСЛИ",
 		       &(tokens[ENDIF]));
+
+
+  g_hash_table_insert (reserve_symbol_table, "ДЛЯ", &(tokens[FOR]));
+  g_hash_table_insert (reserve_symbol_table, "КАЖДОГО",
+		       &(tokens[EACH]));
+  g_hash_table_insert (reserve_symbol_table, "ИЗ", &(tokens[OF]));
+  g_hash_table_insert (reserve_symbol_table, "ПО", &(tokens[TO]));
+  g_hash_table_insert (reserve_symbol_table, "ПОКА", &(tokens[WHILE]));
+  g_hash_table_insert (reserve_symbol_table, "ЦИКЛ", &(tokens[LOOP]));
+  g_hash_table_insert (reserve_symbol_table, "ПРЕРВАТЬ",
+		       &(tokens[BREAK]));
+  g_hash_table_insert (reserve_symbol_table, "ПРОДОЛЖИТЬ",
+		       &(tokens[CONTINUE]));
+  g_hash_table_insert (reserve_symbol_table, "КОНЕЦЦИКЛА",
+		       &(tokens[ENDLOOP]));
 
 }
 
@@ -289,7 +339,7 @@ destroy_lex ()
 /*!include:re2c "unicode_categories.re" */
 
 token *
-lex ()
+get_token ()
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -407,7 +457,7 @@ main (int argc, char **argv)
 
   init_lex (argv[1]);
 
-  while ((tok = lex ()))
+  while ((tok = get_token ()))
     print_token (tok, fd_log);
 
   destroy_lex ();
