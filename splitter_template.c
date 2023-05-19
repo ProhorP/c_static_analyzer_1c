@@ -20,47 +20,48 @@ enum TAG
     , TEST			//2
     , POINT			//3
     , COMMA			//4
-    , SEMICOLON			//5
-    , LEFT_PARENTHESIS		//6
-    , RIGHT_PARENTHESIS		//7
-    , LEFT_SQUARE_BRACKET	//8
-    , RIGHT_SQUARE_BRACKET	//9
-    , WHITESPACE		//10
-    , TAB			//11
-    , NEWLINE			//12
+    , COLON			//5
+    , SEMICOLON			//6
+    , LEFT_PARENTHESIS		//7
+    , RIGHT_PARENTHESIS		//8
+    , LEFT_SQUARE_BRACKET	//9
+    , RIGHT_SQUARE_BRACKET	//10
+    , WHITESPACE		//11
+    , TAB			//12
+    , NEWLINE			//13
 //IF
-    , IF			//13
-    , THEN			//14
-    , ELSIF			//15
-    , ELSE			//16
-    , ENDIF			//17
+    , IF			//14
+    , THEN			//15
+    , ELSIF			//16
+    , ELSE			//17
+    , ENDIF			//18
 //DO
-    , FOR			//18
-    , EACH			//19
-    , IN			//20
-    , TO			//21
-    , WHILE			//22
-    , DO			//23
-    , BREAK			//24
-    , CONTINUE			//25
-    , ENDDO			//26
+    , FOR			//19
+    , EACH			//20
+    , IN			//21
+    , TO			//22
+    , WHILE			//23
+    , DO			//24
+    , BREAK			//25
+    , CONTINUE			//26
+    , ENDDO			//27
 //FUNCTION
-    , PROCEDURE			//27
-    , FUNCTION			//28
-    , ENDPROCEDURE			//29
-    , ENDFUNCTION			//30
-    , VAR			//31
-    , GOTO			//32
-    , RETURN			//33
-    , AND			//34
-    , OR			//35
-    , NOT			//36
-    , TRY			//37
-    , EXCEPT			//38
-    , RAISE			//39
-    , ENDTRY			//40
-    , NEW			//41
-    , EXECUTE			//42
+    , PROCEDURE			//28
+    , FUNCTION			//29
+    , ENDPROCEDURE		//30
+    , ENDFUNCTION		//31
+    , VAR			//32
+    , GOTO			//33
+    , RETURN			//34
+    , AND			//35
+    , OR			//36
+    , NOT			//37
+    , TRY			//38
+    , EXCEPT			//39
+    , RAISE			//40
+    , ENDTRY			//41
+    , NEW			//42
+    , EXECUTE			//43
 //OTHER
     , RELOP			//
     , MATH			//
@@ -78,47 +79,48 @@ char *tag_text[] = {
     , "TEST"			//2
     , "POINT"			//3
     , "COMMA"			//4
-    , "SEMICOLON"		//5
-    , "LEFT_PARENTHESIS"	//6
-    , "RIGHT_PARENTHESIS"	//7
-    , "LEFT_SQUARE_BRACKET"	//8
-    , "RIGHT_SQUARE_BRACKET"	//9
-    , "WHITESPACE"		//10
-    , "TAB"			//11
-    , "NEWLINE"			//12
+    , "COLON"			//5
+    , "SEMICOLON"		//6
+    , "LEFT_PARENTHESIS"	//7
+    , "RIGHT_PARENTHESIS"	//8
+    , "LEFT_SQUARE_BRACKET"	//9
+    , "RIGHT_SQUARE_BRACKET"	//10
+    , "WHITESPACE"		//11
+    , "TAB"			//12
+    , "NEWLINE"			//13
 //IF
-    , "IF"			//13
-    , "THEN"			//14
-    , "ELSIF"			//15
-    , "ELSE"			//16
-    , "ENDIF"			//17
+    , "IF"			//14
+    , "THEN"			//15
+    , "ELSIF"			//16
+    , "ELSE"			//17
+    , "ENDIF"			//18
 //DO
-    , "FOR"			//18
-    , "EACH"			//19
-    , "IN"			//20
-    , "TO"			//21
-    , "WHILE"			//22
-    , "DO"			//23
-    , "BREAK"			//24
-    , "CONTINUE"		//25
-    , "ENDDO"			//26
+    , "FOR"			//19
+    , "EACH"			//20
+    , "IN"			//21
+    , "TO"			//22
+    , "WHILE"			//23
+    , "DO"			//24
+    , "BREAK"			//25
+    , "CONTINUE"		//26
+    , "ENDDO"			//27
 //FUNCTION
-    , "PROCEDURE"			//27
-    , "FUNCTION"			//28
-    , "ENDPROCEDURE"			//29
-    , "ENDFUNCTION"			//30
-    , "VAR"			//31
-    , "GOTO"			//32
-    , "RETURN"			//33
-    , "AND"			//34
-    , "OR"			//35
-    , "NOT"			//36
-    , "TRY"			//37
-    , "EXCEPT"			//38
-    , "RAISE"			//39
-    , "ENDTRY"			//40
-    , "NEW"			//41
-    , "EXECUTE"			//42
+    , "PROCEDURE"		//28
+    , "FUNCTION"		//29
+    , "ENDPROCEDURE"		//30
+    , "ENDFUNCTION"		//31
+    , "VAR"			//32
+    , "GOTO"			//33
+    , "RETURN"			//34
+    , "AND"			//35
+    , "OR"			//36
+    , "NOT"			//37
+    , "TRY"			//38
+    , "EXCEPT"			//39
+    , "RAISE"			//40
+    , "ENDTRY"			//41
+    , "NEW"			//42
+    , "EXECUTE"			//43
 //OTHER
     , "RELOP"			//
     , "MATH"			//
@@ -182,47 +184,48 @@ token tokens[] = {
   , {TEST}			//2
   , {POINT}			//3
   , {COMMA}			//4
-  , {SEMICOLON}			//5
-  , {LEFT_PARENTHESIS}		//6
-  , {RIGHT_PARENTHESIS}		//7
-  , {LEFT_SQUARE_BRACKET}	//8
-  , {RIGHT_SQUARE_BRACKET}	//9
-  , {WHITESPACE}		//10
-  , {TAB}			//11
-  , {NEWLINE}			//12
+  , {COLON}			//5
+  , {SEMICOLON}			//6
+  , {LEFT_PARENTHESIS}		//7
+  , {RIGHT_PARENTHESIS}		//8
+  , {LEFT_SQUARE_BRACKET}	//9
+  , {RIGHT_SQUARE_BRACKET}	//10
+  , {WHITESPACE}		//11
+  , {TAB}			//12
+  , {NEWLINE}			//13
 //IF
-  , {IF}			//13
-  , {THEN}			//14
-  , {ELSIF}			//15
-  , {ELSE}			//16
-  , {ENDIF}			//17
+  , {IF}			//14
+  , {THEN}			//15
+  , {ELSIF}			//16
+  , {ELSE}			//17
+  , {ENDIF}			//18
 //DO
-  , {FOR}			//18
-  , {EACH}			//19
-  , {IN}			//20
-  , {TO}			//21
-  , {WHILE}			//22
-  , {DO}			//23
-  , {BREAK}			//24
-  , {CONTINUE}			//25
-  , {ENDDO}			//26
+  , {FOR}			//19
+  , {EACH}			//20
+  , {IN}			//21
+  , {TO}			//22
+  , {WHILE}			//23
+  , {DO}			//24
+  , {BREAK}			//25
+  , {CONTINUE}			//26
+  , {ENDDO}			//27
 //FUNCTION
-    , {PROCEDURE}			//27
-    , {FUNCTION}			//28
-    , {ENDPROCEDURE}			//29
-    , {ENDFUNCTION}			//30
-    , {VAR}			//31
-    , {GOTO}			//32
-    , {RETURN}			//33
-    , {AND}			//34
-    , {OR}			//35
-    , {NOT}			//36
-    , {TRY}			//37
-    , {EXCEPT}			//38
-    , {RAISE}			//39
-    , {ENDTRY}			//40
-    , {NEW}			//41
-    , {EXECUTE}			//42
+  , {PROCEDURE}			//28
+  , {FUNCTION}			//29
+  , {ENDPROCEDURE}		//30
+  , {ENDFUNCTION}		//31
+  , {VAR}			//32
+  , {GOTO}			//33
+  , {RETURN}			//34
+  , {AND}			//35
+  , {OR}			//36
+  , {NOT}			//37
+  , {TRY}			//38
+  , {EXCEPT}			//39
+  , {RAISE}			//40
+  , {ENDTRY}			//41
+  , {NEW}			//42
+  , {EXECUTE}			//43
 
 };
 
@@ -334,22 +337,19 @@ fill_reserve_symbol_table ()
   g_hash_table_insert (reserve_symbol_table, "THEN", &(tokens[THEN]));
   g_hash_table_insert (reserve_symbol_table, "ИНАЧЕЕСЛИ",
 		       &(tokens[ELSIF]));
-  g_hash_table_insert (reserve_symbol_table, "ELSIF",
-		       &(tokens[ELSIF]));
+  g_hash_table_insert (reserve_symbol_table, "ELSIF", &(tokens[ELSIF]));
   g_hash_table_insert (reserve_symbol_table, "ИНАЧЕ", &(tokens[ELSE]));
   g_hash_table_insert (reserve_symbol_table, "ELSE", &(tokens[ELSE]));
   g_hash_table_insert (reserve_symbol_table, "КОНЕЦЕСЛИ",
 		       &(tokens[ENDIF]));
-  g_hash_table_insert (reserve_symbol_table, "ENDIF",
-		       &(tokens[ENDIF]));
+  g_hash_table_insert (reserve_symbol_table, "ENDIF", &(tokens[ENDIF]));
 
 //DO
   g_hash_table_insert (reserve_symbol_table, "ДЛЯ", &(tokens[FOR]));
   g_hash_table_insert (reserve_symbol_table, "FOR", &(tokens[FOR]));
   g_hash_table_insert (reserve_symbol_table, "КАЖДОГО",
 		       &(tokens[EACH]));
-  g_hash_table_insert (reserve_symbol_table, "EACH",
-		       &(tokens[EACH]));
+  g_hash_table_insert (reserve_symbol_table, "EACH", &(tokens[EACH]));
   g_hash_table_insert (reserve_symbol_table, "ИЗ", &(tokens[IN]));
   g_hash_table_insert (reserve_symbol_table, "IN", &(tokens[IN]));
   g_hash_table_insert (reserve_symbol_table, "ПО", &(tokens[TO]));
@@ -360,31 +360,37 @@ fill_reserve_symbol_table ()
   g_hash_table_insert (reserve_symbol_table, "DO", &(tokens[DO]));
   g_hash_table_insert (reserve_symbol_table, "ПРЕРВАТЬ",
 		       &(tokens[BREAK]));
-  g_hash_table_insert (reserve_symbol_table, "BREAK",
-		       &(tokens[BREAK]));
+  g_hash_table_insert (reserve_symbol_table, "BREAK", &(tokens[BREAK]));
   g_hash_table_insert (reserve_symbol_table, "ПРОДОЛЖИТЬ",
 		       &(tokens[CONTINUE]));
-  g_hash_table_insert (reserve_symbol_table, "CONTINUE",
-		       &(tokens[CONTINUE]));
+  g_hash_table_insert (reserve_symbol_table, "CONTINUE", &(tokens[CONTINUE]));
   g_hash_table_insert (reserve_symbol_table, "КОНЕЦЦИКЛА",
 		       &(tokens[ENDDO]));
-  g_hash_table_insert (reserve_symbol_table, "ENDDO",
-		       &(tokens[ENDDO]));
+  g_hash_table_insert (reserve_symbol_table, "ENDDO", &(tokens[ENDDO]));
 
 //FUNCTION
-  g_hash_table_insert (reserve_symbol_table, "ПРОЦЕДУРА", &(tokens[PROCEDURE]));
-  g_hash_table_insert (reserve_symbol_table, "PROCEDURE", &(tokens[PROCEDURE]));
-  g_hash_table_insert (reserve_symbol_table, "ФУНКЦИЯ", &(tokens[FUNCTION]));
+  g_hash_table_insert (reserve_symbol_table, "ПРОЦЕДУРА",
+		       &(tokens[PROCEDURE]));
+  g_hash_table_insert (reserve_symbol_table, "PROCEDURE",
+		       &(tokens[PROCEDURE]));
+  g_hash_table_insert (reserve_symbol_table, "ФУНКЦИЯ",
+		       &(tokens[FUNCTION]));
   g_hash_table_insert (reserve_symbol_table, "FUNCTION", &(tokens[FUNCTION]));
-  g_hash_table_insert (reserve_symbol_table, "КОНЕЦПРОЦЕДУРЫ", &(tokens[ENDPROCEDURE]));
-  g_hash_table_insert (reserve_symbol_table, "ENDPROCEDURE", &(tokens[ENDPROCEDURE]));
-  g_hash_table_insert (reserve_symbol_table, "КОНЕЦФУНКЦИИ", &(tokens[ENDFUNCTION]));
-  g_hash_table_insert (reserve_symbol_table, "ENDFUNCTION", &(tokens[ENDFUNCTION]));
+  g_hash_table_insert (reserve_symbol_table, "КОНЕЦПРОЦЕДУРЫ",
+		       &(tokens[ENDPROCEDURE]));
+  g_hash_table_insert (reserve_symbol_table, "ENDPROCEDURE",
+		       &(tokens[ENDPROCEDURE]));
+  g_hash_table_insert (reserve_symbol_table, "КОНЕЦФУНКЦИИ",
+		       &(tokens[ENDFUNCTION]));
+  g_hash_table_insert (reserve_symbol_table, "ENDFUNCTION",
+		       &(tokens[ENDFUNCTION]));
   g_hash_table_insert (reserve_symbol_table, "ПЕРЕМ", &(tokens[VAR]));
   g_hash_table_insert (reserve_symbol_table, "VAR", &(tokens[VAR]));
-  g_hash_table_insert (reserve_symbol_table, "ПЕРЕЙТИ", &(tokens[GOTO]));
+  g_hash_table_insert (reserve_symbol_table, "ПЕРЕЙТИ",
+		       &(tokens[GOTO]));
   g_hash_table_insert (reserve_symbol_table, "GOTO", &(tokens[GOTO]));
-  g_hash_table_insert (reserve_symbol_table, "ВОЗВРАТ", &(tokens[RETURN]));
+  g_hash_table_insert (reserve_symbol_table, "ВОЗВРАТ",
+		       &(tokens[RETURN]));
   g_hash_table_insert (reserve_symbol_table, "RETURN", &(tokens[RETURN]));
   g_hash_table_insert (reserve_symbol_table, "И", &(tokens[AND]));
   g_hash_table_insert (reserve_symbol_table, "AND", &(tokens[AND]));
@@ -392,17 +398,23 @@ fill_reserve_symbol_table ()
   g_hash_table_insert (reserve_symbol_table, "OR", &(tokens[OR]));
   g_hash_table_insert (reserve_symbol_table, "НЕ", &(tokens[NOT]));
   g_hash_table_insert (reserve_symbol_table, "NOT", &(tokens[NOT]));
-  g_hash_table_insert (reserve_symbol_table, "ПОПЫТКА", &(tokens[TRY]));
+  g_hash_table_insert (reserve_symbol_table, "ПОПЫТКА",
+		       &(tokens[TRY]));
   g_hash_table_insert (reserve_symbol_table, "TRY", &(tokens[TRY]));
-  g_hash_table_insert (reserve_symbol_table, "ИСКЛЮЧЕНИЕ", &(tokens[EXCEPT]));
+  g_hash_table_insert (reserve_symbol_table, "ИСКЛЮЧЕНИЕ",
+		       &(tokens[EXCEPT]));
   g_hash_table_insert (reserve_symbol_table, "EXCEPT", &(tokens[EXCEPT]));
-  g_hash_table_insert (reserve_symbol_table, "ВЫЗВАТЬИСКЛЮЧЕНИЕ", &(tokens[RAISE]));
+  g_hash_table_insert (reserve_symbol_table,
+		       "ВЫЗВАТЬИСКЛЮЧЕНИЕ",
+		       &(tokens[RAISE]));
   g_hash_table_insert (reserve_symbol_table, "RAISE", &(tokens[RAISE]));
-  g_hash_table_insert (reserve_symbol_table, "КОНЕЦПОПЫТКИ", &(tokens[ENDTRY]));
+  g_hash_table_insert (reserve_symbol_table, "КОНЕЦПОПЫТКИ",
+		       &(tokens[ENDTRY]));
   g_hash_table_insert (reserve_symbol_table, "ENDTRY", &(tokens[ENDTRY]));
   g_hash_table_insert (reserve_symbol_table, "НОВЫЙ", &(tokens[NEW]));
   g_hash_table_insert (reserve_symbol_table, "NEW", &(tokens[NEW]));
-  g_hash_table_insert (reserve_symbol_table, "ВЫПОЛНИТЬ", &(tokens[EXECUTE]));
+  g_hash_table_insert (reserve_symbol_table, "ВЫПОЛНИТЬ",
+		       &(tokens[EXECUTE]));
   g_hash_table_insert (reserve_symbol_table, "EXECUTE", &(tokens[EXECUTE]));
 }
 
@@ -502,7 +514,7 @@ loop:
      comment { end_pos = YYCURSOR; goto loop; }
      point { end_pos = YYCURSOR; return &(tokens[POINT]); }
      comma { end_pos = YYCURSOR; return &(tokens[COMMA]); }
-     colon { end_pos = YYCURSOR; goto loop; }
+     colon { end_pos = YYCURSOR; return &(tokens[COLON]); }
      semicolon { end_pos = YYCURSOR; return &(tokens[SEMICOLON]); }
      left_parenthesis { end_pos = YYCURSOR; return &(tokens[LEFT_PARENTHESIS]); }
      right_parenthesis { end_pos = YYCURSOR; return &(tokens[RIGHT_PARENTHESIS]); }
