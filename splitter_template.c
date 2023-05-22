@@ -62,6 +62,15 @@ enum TAG
     , ENDTRY			//41
     , NEW			//42
     , EXECUTE			//43
+    , ADDHANDLER			//44
+    , REMOVEHANDLER			//45
+//type
+    , T_NULL			//46
+    , T_TRUE			//47
+    , T_FALSE			//48
+    , T_UNDEFINED			//49
+    , EXPORT			//50
+    , VAL			//51
 //OTHER
     , RELOP			//
     , MATH			//
@@ -69,7 +78,7 @@ enum TAG
     , DATE			//
     , LITERAL			//
     , PREPROCESSOR		//
-    , AREA			//
+    , DIRECTIVE			//
     , ID			//
 };
 
@@ -121,6 +130,15 @@ char *tag_text[] = {
     , "ENDTRY"			//41
     , "NEW"			//42
     , "EXECUTE"			//43
+    , "ADDHANDLER"			//44
+    , "REMOVEHANDLER"			//45
+//type
+    , "T_NULL"			//46
+    , "T_TRUE"			//47
+    , "T_FALSE"			//48
+    , "T_UNDEFINED"			//49
+    , "EXPORT"			//50
+    , "VAL"			//51
 //OTHER
     , "RELOP"			//
     , "MATH"			//
@@ -128,7 +146,7 @@ char *tag_text[] = {
     , "DATE"			//
     , "LITERAL"			//
     , "PREPROCESSOR"		//
-    , "AREA"			//
+    , "DIRECTIVE"			//
     , "ID"			//
 };
 
@@ -226,7 +244,15 @@ token tokens[] = {
   , {ENDTRY}			//41
   , {NEW}			//42
   , {EXECUTE}			//43
-
+    , {ADDHANDLER}			//44
+    , {REMOVEHANDLER}			//45
+//type
+    , {T_NULL}			//46
+    , {T_TRUE}			//47
+    , {T_FALSE}			//48
+    , {T_UNDEFINED}			//49
+    , {EXPORT}			//50
+    , {VAL}			//51
 };
 
 token_attr tokens_attr[] = {
@@ -282,7 +308,7 @@ create_token_table (const enum TAG tag)
       cur_token = g_hash_table_lookup (symbol_table, buf_str);
     }
   else
-/*if (tag == PREPROCESSOR || tag == AREA || tag == ID)*/
+/*if (tag == PREPROCESSOR || tag == DIRECTIVE || tag == ID)*/
     {
       lexeme_upper = g_utf8_strup (start_pos, n);
 
@@ -416,6 +442,23 @@ fill_reserve_symbol_table ()
   g_hash_table_insert (reserve_symbol_table, "ВЫПОЛНИТЬ",
 		       &(tokens[EXECUTE]));
   g_hash_table_insert (reserve_symbol_table, "EXECUTE", &(tokens[EXECUTE]));
+  g_hash_table_insert (reserve_symbol_table, "ДОБАВИТЬОБРАБОТЧИК", &(tokens[ADDHANDLER]));
+  g_hash_table_insert (reserve_symbol_table, "ADDHANDLER", &(tokens[ADDHANDLER]));
+  g_hash_table_insert (reserve_symbol_table, "УДАЛИТЬОБРАБОТЧИК", &(tokens[REMOVEHANDLER]));
+  g_hash_table_insert (reserve_symbol_table, "REMOVEHANDLER", &(tokens[REMOVEHANDLER]));
+//TYPE
+  g_hash_table_insert (reserve_symbol_table, "NULL", &(tokens[T_NULL]));
+  g_hash_table_insert (reserve_symbol_table, "ИСТИНА", &(tokens[T_TRUE]));
+  g_hash_table_insert (reserve_symbol_table, "TRUE", &(tokens[T_TRUE]));
+  g_hash_table_insert (reserve_symbol_table, "ЛОЖЬ", &(tokens[T_FALSE]));
+  g_hash_table_insert (reserve_symbol_table, "FALSE", &(tokens[T_FALSE]));
+  g_hash_table_insert (reserve_symbol_table, "НЕОПРЕДЕЛЕНО", &(tokens[T_UNDEFINED]));
+  g_hash_table_insert (reserve_symbol_table, "UNDEFINED", &(tokens[T_UNDEFINED]));
+  g_hash_table_insert (reserve_symbol_table, "ЭКСПОРТ", &(tokens[EXPORT]));
+  g_hash_table_insert (reserve_symbol_table, "EXPORT", &(tokens[EXPORT]));
+  g_hash_table_insert (reserve_symbol_table, "ЗНАЧ", &(tokens[VAL]));
+  g_hash_table_insert (reserve_symbol_table, "VAL", &(tokens[VAL]));
+
 }
 
 void
@@ -507,8 +550,8 @@ loop:
      number = digits([\.]digits)?;
      date = ['] [^']+ ['];
      literal = ["] ([^"] | ["]["])* ["];
-     preprocessor = [&][^\n]+;
-     area = [#][^\n]+;
+     preprocessor = [#][^\n]+;
+     directive = [&][^\n]+;
      id = [^'"\.,:;()\[\] \t\n=<>+\-*\/%&#]+;
 
      comment { end_pos = YYCURSOR; goto loop; }
@@ -538,7 +581,7 @@ loop:
      date { end_pos = YYCURSOR; return (token *) create_token_table(DATE); }
      literal { end_pos = YYCURSOR; return (token *) create_token_table(LITERAL); }
      preprocessor { end_pos = YYCURSOR; return (token *) create_token_table(PREPROCESSOR); }
-     area { end_pos = YYCURSOR; return (token *) create_token_table(AREA); }
+     directive { end_pos = YYCURSOR; return (token *) create_token_table(DIRECTIVE); }
      id { end_pos = YYCURSOR; return (token *) create_token_table(ID); }
      $ { end_pos = YYCURSOR; return &(tokens[END]); }
      *  { end_pos = YYCURSOR; return &(tokens[ERROR]); }
