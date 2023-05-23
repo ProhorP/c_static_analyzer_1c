@@ -12,82 +12,8 @@
 #include <glib/gprintf.h>
 #include <stdbool.h>
 
-#define BUFFSIZE 409600
-enum TAG
-{
-  ERROR				//0
-    , END			//1
-    , TEST			//2
-    , POINT			//3
-    , COMMA			//4
-    , COLON			//5
-    , SEMICOLON			//6
-    , LEFT_PARENTHESIS		//7
-    , RIGHT_PARENTHESIS		//8
-    , LEFT_SQUARE_BRACKET	//9
-    , RIGHT_SQUARE_BRACKET	//10
-    , WHITESPACE		//11
-    , TAB			//12
-    , NEWLINE			//13
-//IF
-    , IF			//14
-    , THEN			//15
-    , ELSIF			//16
-    , ELSE			//17
-    , ENDIF			//18
-//DO
-    , FOR			//19
-    , EACH			//20
-    , IN			//21
-    , TO			//22
-    , WHILE			//23
-    , DO			//24
-    , BREAK			//25
-    , CONTINUE			//26
-    , ENDDO			//27
-//FUNCTION
-    , PROCEDURE			//28
-    , FUNCTION			//29
-    , ENDPROCEDURE		//30
-    , ENDFUNCTION		//31
-    , VAR			//32
-    , GOTO			//33
-    , RETURN			//34
-    , AND			//35
-    , OR			//36
-    , NOT			//37
-    , TRY			//38
-    , EXCEPT			//39
-    , RAISE			//40
-    , ENDTRY			//41
-    , NEW			//42
-    , EXECUTE			//43
-    , ADDHANDLER			//44
-    , REMOVEHANDLER			//45
-//type
-    , T_NULL			//46
-    , T_TRUE			//47
-    , T_FALSE			//48
-    , T_UNDEFINED			//49
-    , EXPORT			//50
-    , VAL			//51
-//DIRECTIVE
-    , ATCLIENT			//52
-    , ATSERVER			//53
-    , ATSERVERNOCONTEXT			//54
-    , ATCLIENTATSERVERNOCONTEXT			//55
-    , ATCLIENTATSERVER			//56
-//OTHER
-    , RELOP			//
-    , MATH			//
-    , NUMBER			//
-    , DATE			//
-    , LITERAL			//
-    , PREPROCESSOR		//
-    , DIRECTIVE			//
-    , MARK			//
-    , ID			//
-};
+#include "lex.h"
+#include "../print_error.h"
 
 char *tag_text[] = {
   "ERROR"			//0
@@ -137,21 +63,21 @@ char *tag_text[] = {
     , "ENDTRY"			//41
     , "NEW"			//42
     , "EXECUTE"			//43
-    , "ADDHANDLER"			//44
-    , "REMOVEHANDLER"			//45
+    , "ADDHANDLER"		//44
+    , "REMOVEHANDLER"		//45
 //type
     , "T_NULL"			//46
     , "T_TRUE"			//47
     , "T_FALSE"			//48
-    , "T_UNDEFINED"			//49
+    , "T_UNDEFINED"		//49
     , "EXPORT"			//50
     , "VAL"			//51
 //DIRECTIVE
-    , "ATCLIENT"			//52
-    , "ATSERVER"			//53
-    , "ATSERVERNOCONTEXT"			//54
-    , "ATCLIENTATSERVERNOCONTEXT"			//55
-    , "ATCLIENTATSERVER"			//56
+    , "ATCLIENT"		//52
+    , "ATSERVER"		//53
+    , "ATSERVERNOCONTEXT"	//54
+    , "ATCLIENTATSERVERNOCONTEXT"	//55
+    , "ATCLIENTATSERVER"	//56
 //OTHER
     , "RELOP"			//
     , "MATH"			//
@@ -159,24 +85,9 @@ char *tag_text[] = {
     , "DATE"			//
     , "LITERAL"			//
     , "PREPROCESSOR"		//
-    , "DIRECTIVE"			//
+    , "DIRECTIVE"		//
     , "MARK"			//
     , "ID"			//
-};
-
-enum TAG_ATTR
-{
-  LT				//0
-    , LE			//1
-    , EQ			//2
-    , NE			//3
-    , GT			//4
-    , GE			//5
-    , PLUS			//6
-    , MINUS			//7
-    , MULTIPLY			//8
-    , DIVISION			//9
-    , REMAINDER_OF_DIVISION	//10
 };
 
 char *tag_attr_text[] = {
@@ -192,23 +103,6 @@ char *tag_attr_text[] = {
     , "/"			//9
     , "%"			//10
 };
-
-typedef struct
-{
-  enum TAG tag;
-} token;
-
-typedef struct
-{
-  token base;
-  enum TAG_ATTR attr;
-} token_attr;
-
-typedef struct
-{
-  token base;
-  char *text;
-} token_table;
 
 token tokens[] = {
   {ERROR}			//0
@@ -258,21 +152,21 @@ token tokens[] = {
   , {ENDTRY}			//41
   , {NEW}			//42
   , {EXECUTE}			//43
-    , {ADDHANDLER}			//44
-    , {REMOVEHANDLER}			//45
+  , {ADDHANDLER}		//44
+  , {REMOVEHANDLER}		//45
 //type
-    , {T_NULL}			//46
-    , {T_TRUE}			//47
-    , {T_FALSE}			//48
-    , {T_UNDEFINED}			//49
-    , {EXPORT}			//50
-    , {VAL}			//51
+  , {T_NULL}			//46
+  , {T_TRUE}			//47
+  , {T_FALSE}			//48
+  , {T_UNDEFINED}		//49
+  , {EXPORT}			//50
+  , {VAL}			//51
 //DIRECTIVE
-    , {ATCLIENT}			//52
-    , {ATSERVER}			//53
-    , {ATSERVERNOCONTEXT}			//54
-    , {ATCLIENTATSERVERNOCONTEXT}			//55
-    , {ATCLIENTATSERVER}			//56
+  , {ATCLIENT}			//52
+  , {ATSERVER}			//53
+  , {ATSERVERNOCONTEXT}		//54
+  , {ATCLIENTATSERVERNOCONTEXT}	//55
+  , {ATCLIENTATSERVER}		//56
 };
 
 token_attr tokens_attr[] = {
@@ -301,15 +195,6 @@ const char *end_pos = NULL;
 const char *limit = NULL;
 size_t line = 1;
 
-void
-print_error (const char *format, ...)
-{
-  va_list argptr;
-  va_start (argptr, format);
-  vprintf (format, argptr);
-  va_end (argptr);
-  exit (EXIT_FAILURE);
-}
 
 token_table *
 create_token_table (const enum TAG tag)
@@ -336,12 +221,12 @@ create_token_table (const enum TAG tag)
 	cur_token = g_hash_table_lookup (reserve_symbol_table, lexeme_upper);
 
       if (cur_token == NULL)
-        {
-          if (tag == DIRECTIVE)
-            cur_token = (token_table *) &(tokens[ERROR]);
-          else
-            cur_token = g_hash_table_lookup (symbol_table, lexeme_upper);
-        }
+	{
+	  if (tag == DIRECTIVE)
+	    cur_token = (token_table *) & (tokens[ERROR]);
+	  else
+	    cur_token = g_hash_table_lookup (symbol_table, lexeme_upper);
+	}
 
       if (cur_token != NULL)
 	g_free (lexeme_upper);
@@ -467,34 +352,57 @@ fill_reserve_symbol_table ()
   g_hash_table_insert (reserve_symbol_table, "ВЫПОЛНИТЬ",
 		       &(tokens[EXECUTE]));
   g_hash_table_insert (reserve_symbol_table, "EXECUTE", &(tokens[EXECUTE]));
-  g_hash_table_insert (reserve_symbol_table, "ДОБАВИТЬОБРАБОТЧИК", &(tokens[ADDHANDLER]));
-  g_hash_table_insert (reserve_symbol_table, "ADDHANDLER", &(tokens[ADDHANDLER]));
-  g_hash_table_insert (reserve_symbol_table, "УДАЛИТЬОБРАБОТЧИК", &(tokens[REMOVEHANDLER]));
-  g_hash_table_insert (reserve_symbol_table, "REMOVEHANDLER", &(tokens[REMOVEHANDLER]));
+  g_hash_table_insert (reserve_symbol_table,
+		       "ДОБАВИТЬОБРАБОТЧИК",
+		       &(tokens[ADDHANDLER]));
+  g_hash_table_insert (reserve_symbol_table, "ADDHANDLER",
+		       &(tokens[ADDHANDLER]));
+  g_hash_table_insert (reserve_symbol_table,
+		       "УДАЛИТЬОБРАБОТЧИК",
+		       &(tokens[REMOVEHANDLER]));
+  g_hash_table_insert (reserve_symbol_table, "REMOVEHANDLER",
+		       &(tokens[REMOVEHANDLER]));
 //TYPE
   g_hash_table_insert (reserve_symbol_table, "NULL", &(tokens[T_NULL]));
-  g_hash_table_insert (reserve_symbol_table, "ИСТИНА", &(tokens[T_TRUE]));
+  g_hash_table_insert (reserve_symbol_table, "ИСТИНА",
+		       &(tokens[T_TRUE]));
   g_hash_table_insert (reserve_symbol_table, "TRUE", &(tokens[T_TRUE]));
   g_hash_table_insert (reserve_symbol_table, "ЛОЖЬ", &(tokens[T_FALSE]));
   g_hash_table_insert (reserve_symbol_table, "FALSE", &(tokens[T_FALSE]));
-  g_hash_table_insert (reserve_symbol_table, "НЕОПРЕДЕЛЕНО", &(tokens[T_UNDEFINED]));
-  g_hash_table_insert (reserve_symbol_table, "UNDEFINED", &(tokens[T_UNDEFINED]));
-  g_hash_table_insert (reserve_symbol_table, "ЭКСПОРТ", &(tokens[EXPORT]));
+  g_hash_table_insert (reserve_symbol_table, "НЕОПРЕДЕЛЕНО",
+		       &(tokens[T_UNDEFINED]));
+  g_hash_table_insert (reserve_symbol_table, "UNDEFINED",
+		       &(tokens[T_UNDEFINED]));
+  g_hash_table_insert (reserve_symbol_table, "ЭКСПОРТ",
+		       &(tokens[EXPORT]));
   g_hash_table_insert (reserve_symbol_table, "EXPORT", &(tokens[EXPORT]));
   g_hash_table_insert (reserve_symbol_table, "ЗНАЧ", &(tokens[VAL]));
   g_hash_table_insert (reserve_symbol_table, "VAL", &(tokens[VAL]));
 
 //DIRECTIVE
-  g_hash_table_insert (reserve_symbol_table, "&НАКЛИЕНТЕ", &(tokens[ATCLIENT]));
-  g_hash_table_insert (reserve_symbol_table, "&ATCLIENT", &(tokens[ATCLIENT]));
-  g_hash_table_insert (reserve_symbol_table, "&НАСЕРВЕРЕ", &(tokens[ATSERVER]));
-  g_hash_table_insert (reserve_symbol_table, "&ATSERVER", &(tokens[ATSERVER]));
-  g_hash_table_insert (reserve_symbol_table, "&НАСЕРВЕРЕБЕЗКОНТЕКСТА", &(tokens[ATSERVERNOCONTEXT]));
-  g_hash_table_insert (reserve_symbol_table, "&ATSERVERNOCONTEXT", &(tokens[ATSERVERNOCONTEXT]));
-  g_hash_table_insert (reserve_symbol_table, "&НАКЛИЕНТЕНАСЕРВЕРЕБЕЗКОНТЕКСТА", &(tokens[ATCLIENTATSERVERNOCONTEXT]));
-  g_hash_table_insert (reserve_symbol_table, "&ATCLIENTATSERVERNOCONTEXT", &(tokens[ATCLIENTATSERVERNOCONTEXT]));
-  g_hash_table_insert (reserve_symbol_table, "&НАКЛИЕНТЕНАСЕРВЕРЕ", &(tokens[ATCLIENTATSERVER]));
-  g_hash_table_insert (reserve_symbol_table, "&ATCLIENTATSERVER", &(tokens[ATCLIENTATSERVER]));
+  g_hash_table_insert (reserve_symbol_table, "&НАКЛИЕНТЕ",
+		       &(tokens[ATCLIENT]));
+  g_hash_table_insert (reserve_symbol_table, "&ATCLIENT",
+		       &(tokens[ATCLIENT]));
+  g_hash_table_insert (reserve_symbol_table, "&НАСЕРВЕРЕ",
+		       &(tokens[ATSERVER]));
+  g_hash_table_insert (reserve_symbol_table, "&ATSERVER",
+		       &(tokens[ATSERVER]));
+  g_hash_table_insert (reserve_symbol_table,
+		       "&НАСЕРВЕРЕБЕЗКОНТЕКСТА",
+		       &(tokens[ATSERVERNOCONTEXT]));
+  g_hash_table_insert (reserve_symbol_table, "&ATSERVERNOCONTEXT",
+		       &(tokens[ATSERVERNOCONTEXT]));
+  g_hash_table_insert (reserve_symbol_table,
+		       "&НАКЛИЕНТЕНАСЕРВЕРЕБЕЗКОНТЕКСТА",
+		       &(tokens[ATCLIENTATSERVERNOCONTEXT]));
+  g_hash_table_insert (reserve_symbol_table, "&ATCLIENTATSERVERNOCONTEXT",
+		       &(tokens[ATCLIENTATSERVERNOCONTEXT]));
+  g_hash_table_insert (reserve_symbol_table,
+		       "&НАКЛИЕНТЕНАСЕРВЕРЕ",
+		       &(tokens[ATCLIENTATSERVER]));
+  g_hash_table_insert (reserve_symbol_table, "&ATCLIENTATSERVER",
+		       &(tokens[ATCLIENTATSERVER]));
 }
 
 void
@@ -641,31 +549,4 @@ print_token (token * tok, int fd_log)
     dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
 	     ((token_table *) tok)->text);
 #pragma GCC diagnostic pop
-}
-
-int
-main (int argc, char **argv)
-{
-
-  if (argc != 3)
-    print_error ("%s",
-		 "Правильный формат:./a.out ./test/test01 ./log");
-
-  int fd_log;
-
-  if ((fd_log =
-       open (argv[2], O_WRONLY | O_CREAT | O_APPEND, S_IWUSR | S_IRUSR)) < 0)
-    print_error ("невозможно открыть %s для записи",
-		 argv[2]);
-
-  token *tok = NULL;
-
-  init_lex (argv[1]);
-
-  while ((tok = get_token ()))
-    print_token (tok, fd_log);
-
-  destroy_lex ();
-
-  return EXIT_SUCCESS;
 }
