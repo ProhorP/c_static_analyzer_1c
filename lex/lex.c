@@ -1,17 +1,12 @@
 // re2c $INPUT -o $OUTPUT -8 --case-ranges -i
 #include <assert.h>
-#include <stdio.h>
 #include <sys/mman.h>
-#include <stdlib.h>
 #include <errno.h>
-#include <stdarg.h>
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <glib.h>
 #include <glib/gprintf.h>
-#include <stdbool.h>
-
 #include "lex.h"
 #include "../print_error.h"
 

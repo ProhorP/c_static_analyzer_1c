@@ -1,4 +1,3 @@
-
 #define BUFFSIZE 409600
 
 enum TAG
@@ -116,5 +115,3 @@ void destroy_lex (void);
 token *get_token (void);
 
 void print_token (token * tok, int fd_log);
-
-void print_error (const char *format, ...);
