@@ -71,6 +71,12 @@ enum TAG
     , T_UNDEFINED			//49
     , EXPORT			//50
     , VAL			//51
+//DIRECTIVE
+    , ATCLIENT			//52
+    , ATSERVER			//53
+    , ATSERVERNOCONTEXT			//54
+    , ATCLIENTATSERVERNOCONTEXT			//55
+    , ATCLIENTATSERVER			//56
 //OTHER
     , RELOP			//
     , MATH			//
@@ -79,6 +85,7 @@ enum TAG
     , LITERAL			//
     , PREPROCESSOR		//
     , DIRECTIVE			//
+    , MARK			//
     , ID			//
 };
 
@@ -139,6 +146,12 @@ char *tag_text[] = {
     , "T_UNDEFINED"			//49
     , "EXPORT"			//50
     , "VAL"			//51
+//DIRECTIVE
+    , "ATCLIENT"			//52
+    , "ATSERVER"			//53
+    , "ATSERVERNOCONTEXT"			//54
+    , "ATCLIENTATSERVERNOCONTEXT"			//55
+    , "ATCLIENTATSERVER"			//56
 //OTHER
     , "RELOP"			//
     , "MATH"			//
@@ -147,6 +160,7 @@ char *tag_text[] = {
     , "LITERAL"			//
     , "PREPROCESSOR"		//
     , "DIRECTIVE"			//
+    , "MARK"			//
     , "ID"			//
 };
 
@@ -253,6 +267,12 @@ token tokens[] = {
     , {T_UNDEFINED}			//49
     , {EXPORT}			//50
     , {VAL}			//51
+//DIRECTIVE
+    , {ATCLIENT}			//52
+    , {ATSERVER}			//53
+    , {ATSERVERNOCONTEXT}			//54
+    , {ATCLIENTATSERVERNOCONTEXT}			//55
+    , {ATCLIENTATSERVER}			//56
 };
 
 token_attr tokens_attr[] = {
@@ -312,11 +332,16 @@ create_token_table (const enum TAG tag)
     {
       lexeme_upper = g_utf8_strup (start_pos, n);
 
-      if (tag == ID)
+      if (tag == ID || tag == DIRECTIVE)
 	cur_token = g_hash_table_lookup (reserve_symbol_table, lexeme_upper);
 
       if (cur_token == NULL)
-	cur_token = g_hash_table_lookup (symbol_table, lexeme_upper);
+        {
+          if (tag == DIRECTIVE)
+            cur_token = (token_table *) &(tokens[ERROR]);
+          else
+            cur_token = g_hash_table_lookup (symbol_table, lexeme_upper);
+        }
 
       if (cur_token != NULL)
 	g_free (lexeme_upper);
@@ -459,6 +484,17 @@ fill_reserve_symbol_table ()
   g_hash_table_insert (reserve_symbol_table, "ЗНАЧ", &(tokens[VAL]));
   g_hash_table_insert (reserve_symbol_table, "VAL", &(tokens[VAL]));
 
+//DIRECTIVE
+  g_hash_table_insert (reserve_symbol_table, "&НАКЛИЕНТЕ", &(tokens[ATCLIENT]));
+  g_hash_table_insert (reserve_symbol_table, "&ATCLIENT", &(tokens[ATCLIENT]));
+  g_hash_table_insert (reserve_symbol_table, "&НАСЕРВЕРЕ", &(tokens[ATSERVER]));
+  g_hash_table_insert (reserve_symbol_table, "&ATSERVER", &(tokens[ATSERVER]));
+  g_hash_table_insert (reserve_symbol_table, "&НАСЕРВЕРЕБЕЗКОНТЕКСТА", &(tokens[ATSERVERNOCONTEXT]));
+  g_hash_table_insert (reserve_symbol_table, "&ATSERVERNOCONTEXT", &(tokens[ATSERVERNOCONTEXT]));
+  g_hash_table_insert (reserve_symbol_table, "&НАКЛИЕНТЕНАСЕРВЕРЕБЕЗКОНТЕКСТА", &(tokens[ATCLIENTATSERVERNOCONTEXT]));
+  g_hash_table_insert (reserve_symbol_table, "&ATCLIENTATSERVERNOCONTEXT", &(tokens[ATCLIENTATSERVERNOCONTEXT]));
+  g_hash_table_insert (reserve_symbol_table, "&НАКЛИЕНТЕНАСЕРВЕРЕ", &(tokens[ATCLIENTATSERVER]));
+  g_hash_table_insert (reserve_symbol_table, "&ATCLIENTATSERVER", &(tokens[ATCLIENTATSERVER]));
 }
 
 void
@@ -551,8 +587,9 @@ loop:
      date = ['] [^']+ ['];
      literal = ["] ([^"] | ["]["])* ["];
      preprocessor = [#][^\n]+;
-     directive = [&][^\n]+;
-     id = [^'"\.,:;()\[\] \t\n=<>+\-*\/%&#]+;
+     id = [^'"\.,:;()\[\] \t\n=<>+\-*\/%&#~]+;
+     mark = [~] id;
+     directive = [&] id;
 
      comment { end_pos = YYCURSOR; goto loop; }
      point { end_pos = YYCURSOR; return &(tokens[POINT]); }
@@ -582,6 +619,7 @@ loop:
      literal { end_pos = YYCURSOR; return (token *) create_token_table(LITERAL); }
      preprocessor { end_pos = YYCURSOR; return (token *) create_token_table(PREPROCESSOR); }
      directive { end_pos = YYCURSOR; return (token *) create_token_table(DIRECTIVE); }
+     mark { end_pos = YYCURSOR; return (token *) create_token_table(MARK); }
      id { end_pos = YYCURSOR; return (token *) create_token_table(ID); }
      $ { end_pos = YYCURSOR; return &(tokens[END]); }
      *  { end_pos = YYCURSOR; return &(tokens[ERROR]); }
