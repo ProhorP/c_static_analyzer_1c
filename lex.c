@@ -8,7 +8,7 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 #include "lex.h"
-#include "../print_error.h"
+#include "print_error.h"
 
 char *tag_text[] = {
   "ERROR"			//0

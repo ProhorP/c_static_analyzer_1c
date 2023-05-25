@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include "../../lex/lex.h"
+#include "../../lex.h"
 #include "../../print_error.h"
 
 int
