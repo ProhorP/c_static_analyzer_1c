@@ -242,16 +242,16 @@ create_token_table (const enum TAG tag)
       if (cur_token == NULL)
 	print_error
 	  ("Не удалось выделить память под элемент таблицы");
-
-      cur_token->base.tag = tag;
-      cur_token->text = (char *) cur_token + sizeof (token_table);
-
-      memcpy (cur_token->text, start_pos, n);
-
-      if (lexeme_upper)
-	g_hash_table_insert (symbol_table, lexeme_upper, cur_token);
       else
-	g_hash_table_insert (symbol_table, g_strdup (buf_str), cur_token);
+	{
+	  cur_token->base.tag = tag;
+	  cur_token->text = (char *) cur_token + sizeof (token_table);
+	  memcpy (cur_token->text, start_pos, n);
+	  if (lexeme_upper)
+	    g_hash_table_insert (symbol_table, lexeme_upper, cur_token);
+	  else
+	    g_hash_table_insert (symbol_table, g_strdup (buf_str), cur_token);
+	}
     }
 
   return cur_token;
