@@ -1,4 +1,5 @@
 // re2c $INPUT -o $OUTPUT -8 --case-ranges -i
+#define _POSIX_C_SOURCE 200809L
 #include <assert.h>
 #include <sys/mman.h>
 #include <errno.h>
@@ -7,6 +8,7 @@
 #include <sys/stat.h>
 #include <glib.h>
 #include <glib/gprintf.h>
+#include <stdio.h>
 #include "lex.h"
 #include "print_error.h"
 
@@ -181,7 +183,7 @@ token_attr tokens_attr[] = {
 GHashTable *symbol_table = NULL, *reserve_symbol_table = NULL;
 char buf_str[BUFFSIZE] = { 0 };
 
-int fd = 0;
+int module_fd = 0;
 struct stat statbuf = { 0 };
 
 void *src = NULL;
@@ -224,7 +226,10 @@ create_token_table (const enum TAG tag)
 	}
 
       if (cur_token != NULL)
-	g_free (lexeme_upper);
+	{
+	  g_free (lexeme_upper);
+	  lexeme_upper = NULL;
+	}
     }
 
   if (tag == LITERAL)
@@ -403,17 +408,18 @@ fill_reserve_symbol_table ()
 void
 init_lex (char *file_name)
 {
-  if ((fd = open (file_name, O_RDONLY)) < 0)
+  if ((module_fd = open (file_name, O_RDONLY)) < 0)
     print_error ("невозможно открыть %s для чтения",
 		 file_name);
 
-  if (fstat (fd, &statbuf) < 0)
+  if (fstat (module_fd, &statbuf) < 0)
     print_error
       ("Ошибка вызова функции fstat:%s у файла %s\n",
        strerror (errno), file_name);
 
   if ((src =
-       mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED)
+       mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, module_fd,
+	     0)) == MAP_FAILED)
     print_error ("%s\n",
 		 "Ошибка вызова функции mmap для входного файла");
 

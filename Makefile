@@ -6,9 +6,9 @@ PCRE_LIB=`pcre-config --libs`
 
 all: test
 
-test: generic_lex build_test test01 test02 test03 clean
+test: generic_lex build_test test01 test02 test03 
 
-memory_leak_test: generic_lex build_test test01_m test02_m test03_m clean
+memory_leak_test: generic_lex build_test test01_m test02_m test03_m 
 
 generic_lex:
 	~/re2c/.build/re2c ./lex.c -o ./generic_lex.c -8 --case-ranges -i -I ~/re2c/include/
@@ -37,6 +37,4 @@ test03_m:
 clean:
 	rm ./tests/lex_test/test;
 	rm generic_lex.c 
-
-log_clean:
 	rm ./tests/lex_test/log 
