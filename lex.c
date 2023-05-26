@@ -539,8 +539,6 @@ loop:
 void
 print_token (token * tok, int fd_log)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
   if (tok->tag < RELOP)
     dprintf (fd_log, "%ld(%s)\n", line, tag_text[tok->tag]);
   else if (tok->tag < NUMBER)
@@ -549,5 +547,4 @@ print_token (token * tok, int fd_log)
   else
     dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
 	     ((token_table *) tok)->text);
-#pragma GCC diagnostic pop
 }
