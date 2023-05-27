@@ -10,6 +10,15 @@ test: generic_lex build_test test01 test02 test03
 
 memory_leak_test: generic_lex build_test test01_m test02_m test03_m 
 
+analyzer_clang:
+	~/llvm-project/build/bin/scan-build make
+
+pvs_studio_analyzer:
+	pvs-studio-analyzer trace -o /tmp/strace_out make;
+	pvs-studio-analyzer analyze -f /tmp/strace_out -l /home/user/.config/PVS-Studio/PVS-Studio.lic -o /tmp/PVS-Studio.log;
+	plog-converter -a GA:1,2 -t tasklist -o /tmp/report.tasks /tmp/PVS-Studio.log;
+	vim /tmp/report.tasks
+
 generic_lex:
 	~/re2c/.build/re2c ./lex.c -o ./generic_lex.c -8 --case-ranges -i -I ~/re2c/include/
 
