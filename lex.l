@@ -10,175 +10,11 @@
 #include <glib/gprintf.h>
 #include <stdio.h>
 #include "lex.h"
+#include "syn.h"
 #include "print_error.h"
 
-char *tag_text[] = {
-  "ERROR"			//0
-    , "END"			//1
-    , "TEST"			//2
-    , "POINT"			//3
-    , "COMMA"			//4
-    , "COLON"			//5
-    , "SEMICOLON"		//6
-    , "LEFT_PARENTHESIS"	//7
-    , "RIGHT_PARENTHESIS"	//8
-    , "LEFT_SQUARE_BRACKET"	//9
-    , "RIGHT_SQUARE_BRACKET"	//10
-    , "WHITESPACE"		//11
-    , "TAB"			//12
-    , "NEWLINE"			//13
-//IF
-    , "IF"			//14
-    , "THEN"			//15
-    , "ELSIF"			//16
-    , "ELSE"			//17
-    , "ENDIF"			//18
-//DO
-    , "FOR"			//19
-    , "EACH"			//20
-    , "IN"			//21
-    , "TO"			//22
-    , "WHILE"			//23
-    , "DO"			//24
-    , "BREAK"			//25
-    , "CONTINUE"		//26
-    , "ENDDO"			//27
-//FUNCTION
-    , "PROCEDURE"		//28
-    , "FUNCTION"		//29
-    , "ENDPROCEDURE"		//30
-    , "ENDFUNCTION"		//31
-    , "VAR"			//32
-    , "GOTO"			//33
-    , "RETURN"			//34
-    , "AND"			//35
-    , "OR"			//36
-    , "NOT"			//37
-    , "TRY"			//38
-    , "EXCEPT"			//39
-    , "RAISE"			//40
-    , "ENDTRY"			//41
-    , "NEW"			//42
-    , "EXECUTE"			//43
-    , "ADDHANDLER"		//44
-    , "REMOVEHANDLER"		//45
-//type
-    , "T_NULL"			//46
-    , "T_TRUE"			//47
-    , "T_FALSE"			//48
-    , "T_UNDEFINED"		//49
-    , "EXPORT"			//50
-    , "VAL"			//51
-//DIRECTIVE
-    , "ATCLIENT"		//52
-    , "ATSERVER"		//53
-    , "ATSERVERNOCONTEXT"	//54
-    , "ATCLIENTATSERVERNOCONTEXT"	//55
-    , "ATCLIENTATSERVER"	//56
-//OTHER
-    , "RELOP"			//
-    , "MATH"			//
-    , "NUMBER"			//
-    , "DATE"			//
-    , "LITERAL"			//
-    , "PREPROCESSOR"		//
-    , "DIRECTIVE"		//
-    , "MARK"			//
-    , "ID"			//
-};
-
-char *tag_attr_text[] = {
-  "<"				//0
-    , "<="			//1
-    , "="			//2
-    , "<>"			//3
-    , ">"			//4
-    , ">="			//5
-    , "+"			//6
-    , "-"			//7
-    , "*"			//8
-    , "/"			//9
-    , "%"			//10
-};
-
-token tokens[] = {
-  {ERROR}			//0
-  , {END}			//1
-  , {TEST}			//2
-  , {POINT}			//3
-  , {COMMA}			//4
-  , {COLON}			//5
-  , {SEMICOLON}			//6
-  , {LEFT_PARENTHESIS}		//7
-  , {RIGHT_PARENTHESIS}		//8
-  , {LEFT_SQUARE_BRACKET}	//9
-  , {RIGHT_SQUARE_BRACKET}	//10
-  , {WHITESPACE}		//11
-  , {TAB}			//12
-  , {NEWLINE}			//13
-//IF
-  , {IF}			//14
-  , {THEN}			//15
-  , {ELSIF}			//16
-  , {ELSE}			//17
-  , {ENDIF}			//18
-//DO
-  , {FOR}			//19
-  , {EACH}			//20
-  , {IN}			//21
-  , {TO}			//22
-  , {WHILE}			//23
-  , {DO}			//24
-  , {BREAK}			//25
-  , {CONTINUE}			//26
-  , {ENDDO}			//27
-//FUNCTION
-  , {PROCEDURE}			//28
-  , {FUNCTION}			//29
-  , {ENDPROCEDURE}		//30
-  , {ENDFUNCTION}		//31
-  , {VAR}			//32
-  , {GOTO}			//33
-  , {RETURN}			//34
-  , {AND}			//35
-  , {OR}			//36
-  , {NOT}			//37
-  , {TRY}			//38
-  , {EXCEPT}			//39
-  , {RAISE}			//40
-  , {ENDTRY}			//41
-  , {NEW}			//42
-  , {EXECUTE}			//43
-  , {ADDHANDLER}		//44
-  , {REMOVEHANDLER}		//45
-//type
-  , {T_NULL}			//46
-  , {T_TRUE}			//47
-  , {T_FALSE}			//48
-  , {T_UNDEFINED}		//49
-  , {EXPORT}			//50
-  , {VAL}			//51
-//DIRECTIVE
-  , {ATCLIENT}			//52
-  , {ATSERVER}			//53
-  , {ATSERVERNOCONTEXT}		//54
-  , {ATCLIENTATSERVERNOCONTEXT}	//55
-  , {ATCLIENTATSERVER}		//56
-};
-
-token_attr tokens_attr[] = {
-  {{RELOP}, LT}			//0
-  , {{RELOP}, LE}		//1
-  , {{RELOP}, EQ}		//2
-  , {{RELOP}, NE}		//3
-  , {{RELOP}, GT}		//4
-  , {{RELOP}, GE}		//5
-  , {{MATH}, PLUS}		//6
-  , {{MATH}, MINUS}		//7
-  , {{MATH}, MULTIPLY}		//8
-  , {{MATH}, DIVISION}		//9
-  , {{MATH}, REMAINDER_OF_DIVISION}	//10
-};
+#define AS_PTR(val) (intptr_t) (val)
+#define AS_TOKEN(val) (int) (val)
 
 GHashTable *symbol_table = NULL, *reserve_symbol_table = NULL;
 char buf_str[BUFFSIZE] = { 0 };
@@ -192,47 +28,48 @@ const char *end_pos = NULL;
 const char *limit = NULL;
 size_t line = 1;
 
-
-token_table *
-create_token_table (const enum TAG tag)
+int
+get_token (int pre_token, YYSTYPE *lvalp, YYLTYPE *llocp)
 {
-  token_table *cur_token = NULL;
+  char *token_val = NULL;
   size_t n = end_pos - start_pos;
   char *lexeme_upper = NULL;
+  int token = pre_token;
 
   assert (n < BUFFSIZE);
 
-  if (tag < PREPROCESSOR)
-/*if (tag == NUMBER || tag == DATE || tag == LITERAL)*/
+  if (token == NUMBER || token == DATE || token == LITERAL)
     {
       memcpy (buf_str, start_pos, n);
       buf_str[n] = '\0';
-      cur_token = g_hash_table_lookup (symbol_table, buf_str);
+      token_val = g_hash_table_lookup (symbol_table, buf_str);
     }
   else
-/*if (tag == PREPROCESSOR || tag == DIRECTIVE || tag == ID)*/
+/*if (token == PREPROCESSOR || token == DIRECTIVE || token == ID || token == MARK)*/
     {
       lexeme_upper = g_utf8_strup (start_pos, n);
 
-      if (tag == ID || tag == DIRECTIVE)
-	cur_token = g_hash_table_lookup (reserve_symbol_table, lexeme_upper);
+      if (token == ID || token == DIRECTIVE)
+	token_val = g_hash_table_lookup (reserve_symbol_table, lexeme_upper);
 
-      if (cur_token == NULL)
+      if (token_val)
+        token =  AS_TOKEN(token_val);
+      else
 	{
-	  if (tag == DIRECTIVE)
-	    cur_token = (token_table *) & (tokens[ERROR]);
+	  if (token == DIRECTIVE)
+            token = YYUNDEF;
 	  else
-	    cur_token = g_hash_table_lookup (symbol_table, lexeme_upper);
+	    token_val = g_hash_table_lookup (symbol_table, lexeme_upper);
 	}
 
-      if (cur_token != NULL)
+      if (token_val != NULL)
 	{
 	  g_free (lexeme_upper);
 	  lexeme_upper = NULL;
 	}
     }
 
-  if (tag == LITERAL)
+  if (token == LITERAL)
     {
       const char *ptr_literal = start_pos;
       while (ptr_literal != end_pos)
@@ -240,26 +77,30 @@ create_token_table (const enum TAG tag)
 	  line++;
     }
 
-  if (cur_token == NULL)
+  if (token_val == NULL)
     {
-      cur_token = (token_table *) calloc (1, sizeof (token_table) + n + 1);
+      token_val = (char *) calloc (1, n + 1);
 
-      if (cur_token == NULL)
+      if (token_val == NULL)
 	print_error
 	  ("Не удалось выделить память под элемент таблицы");
       else
 	{
-	  cur_token->base.tag = tag;
-	  cur_token->text = (char *) cur_token + sizeof (token_table);
-	  memcpy (cur_token->text, start_pos, n);
+	  memcpy (token_val, start_pos, n);
 	  if (lexeme_upper)
-	    g_hash_table_insert (symbol_table, lexeme_upper, cur_token);
+	    g_hash_table_insert (symbol_table, lexeme_upper, token_val);
 	  else
-	    g_hash_table_insert (symbol_table, g_strdup (buf_str), cur_token);
+	    g_hash_table_insert (symbol_table, g_strdup (buf_str), token_val);
 	}
     }
 
-  return cur_token;
+  if (token == NUMBER || token == DATE || token == LITERAL
+      || token == PREPROCESSOR || token == ID || token == MARK)
+    *lvalp = token_val;
+
+  llocp->last_line = line;
+
+  return token;
 
 }
 
@@ -267,143 +108,143 @@ void
 fill_reserve_symbol_table ()
 {
 //IF
-  g_hash_table_insert (reserve_symbol_table, "ЕСЛИ", &(tokens[IF]));
-  g_hash_table_insert (reserve_symbol_table, "IF", &(tokens[IF]));
-  g_hash_table_insert (reserve_symbol_table, "ТОГДА", &(tokens[THEN]));
-  g_hash_table_insert (reserve_symbol_table, "THEN", &(tokens[THEN]));
+  g_hash_table_insert (reserve_symbol_table, "ЕСЛИ", AS_PTR(IF));
+  g_hash_table_insert (reserve_symbol_table, "IF", AS_PTR(IF));
+  g_hash_table_insert (reserve_symbol_table, "ТОГДА", AS_PTR(THEN));
+  g_hash_table_insert (reserve_symbol_table, "THEN", AS_PTR(THEN));
   g_hash_table_insert (reserve_symbol_table, "ИНАЧЕЕСЛИ",
-		       &(tokens[ELSIF]));
-  g_hash_table_insert (reserve_symbol_table, "ELSIF", &(tokens[ELSIF]));
-  g_hash_table_insert (reserve_symbol_table, "ИНАЧЕ", &(tokens[ELSE]));
-  g_hash_table_insert (reserve_symbol_table, "ELSE", &(tokens[ELSE]));
+		       AS_PTR(ELSIF));
+  g_hash_table_insert (reserve_symbol_table, "ELSIF", AS_PTR(ELSIF));
+  g_hash_table_insert (reserve_symbol_table, "ИНАЧЕ", AS_PTR(ELSE));
+  g_hash_table_insert (reserve_symbol_table, "ELSE", AS_PTR(ELSE));
   g_hash_table_insert (reserve_symbol_table, "КОНЕЦЕСЛИ",
-		       &(tokens[ENDIF]));
-  g_hash_table_insert (reserve_symbol_table, "ENDIF", &(tokens[ENDIF]));
+		       AS_PTR(ENDIF));
+  g_hash_table_insert (reserve_symbol_table, "ENDIF", AS_PTR(ENDIF));
 
 //DO
-  g_hash_table_insert (reserve_symbol_table, "ДЛЯ", &(tokens[FOR]));
-  g_hash_table_insert (reserve_symbol_table, "FOR", &(tokens[FOR]));
+  g_hash_table_insert (reserve_symbol_table, "ДЛЯ", AS_PTR(FOR));
+  g_hash_table_insert (reserve_symbol_table, "FOR", AS_PTR(FOR));
   g_hash_table_insert (reserve_symbol_table, "КАЖДОГО",
-		       &(tokens[EACH]));
-  g_hash_table_insert (reserve_symbol_table, "EACH", &(tokens[EACH]));
-  g_hash_table_insert (reserve_symbol_table, "ИЗ", &(tokens[IN]));
-  g_hash_table_insert (reserve_symbol_table, "IN", &(tokens[IN]));
-  g_hash_table_insert (reserve_symbol_table, "ПО", &(tokens[TO]));
-  g_hash_table_insert (reserve_symbol_table, "TO", &(tokens[TO]));
-  g_hash_table_insert (reserve_symbol_table, "ПОКА", &(tokens[WHILE]));
-  g_hash_table_insert (reserve_symbol_table, "WHILE", &(tokens[WHILE]));
-  g_hash_table_insert (reserve_symbol_table, "ЦИКЛ", &(tokens[DO]));
-  g_hash_table_insert (reserve_symbol_table, "DO", &(tokens[DO]));
+		       AS_PTR(EACH));
+  g_hash_table_insert (reserve_symbol_table, "EACH", AS_PTR(EACH));
+  g_hash_table_insert (reserve_symbol_table, "ИЗ", AS_PTR(IN));
+  g_hash_table_insert (reserve_symbol_table, "IN", AS_PTR(IN));
+  g_hash_table_insert (reserve_symbol_table, "ПО", AS_PTR(TO));
+  g_hash_table_insert (reserve_symbol_table, "TO", AS_PTR(TO));
+  g_hash_table_insert (reserve_symbol_table, "ПОКА", AS_PTR(WHILE));
+  g_hash_table_insert (reserve_symbol_table, "WHILE", AS_PTR(WHILE));
+  g_hash_table_insert (reserve_symbol_table, "ЦИКЛ", AS_PTR(DO));
+  g_hash_table_insert (reserve_symbol_table, "DO", AS_PTR(DO));
   g_hash_table_insert (reserve_symbol_table, "ПРЕРВАТЬ",
-		       &(tokens[BREAK]));
-  g_hash_table_insert (reserve_symbol_table, "BREAK", &(tokens[BREAK]));
+		       AS_PTR(BREAK));
+  g_hash_table_insert (reserve_symbol_table, "BREAK", AS_PTR(BREAK));
   g_hash_table_insert (reserve_symbol_table, "ПРОДОЛЖИТЬ",
-		       &(tokens[CONTINUE]));
-  g_hash_table_insert (reserve_symbol_table, "CONTINUE", &(tokens[CONTINUE]));
+		       AS_PTR(CONTINUE));
+  g_hash_table_insert (reserve_symbol_table, "CONTINUE", AS_PTR(CONTINUE));
   g_hash_table_insert (reserve_symbol_table, "КОНЕЦЦИКЛА",
-		       &(tokens[ENDDO]));
-  g_hash_table_insert (reserve_symbol_table, "ENDDO", &(tokens[ENDDO]));
+		       AS_PTR(ENDDO));
+  g_hash_table_insert (reserve_symbol_table, "ENDDO", AS_PTR(ENDDO));
 
 //FUNCTION
   g_hash_table_insert (reserve_symbol_table, "ПРОЦЕДУРА",
-		       &(tokens[PROCEDURE]));
+		       AS_PTR(PROCEDURE));
   g_hash_table_insert (reserve_symbol_table, "PROCEDURE",
-		       &(tokens[PROCEDURE]));
+		       AS_PTR(PROCEDURE));
   g_hash_table_insert (reserve_symbol_table, "ФУНКЦИЯ",
-		       &(tokens[FUNCTION]));
-  g_hash_table_insert (reserve_symbol_table, "FUNCTION", &(tokens[FUNCTION]));
+		       AS_PTR(FUNCTION));
+  g_hash_table_insert (reserve_symbol_table, "FUNCTION", AS_PTR(FUNCTION));
   g_hash_table_insert (reserve_symbol_table, "КОНЕЦПРОЦЕДУРЫ",
-		       &(tokens[ENDPROCEDURE]));
+		       AS_PTR(ENDPROCEDURE));
   g_hash_table_insert (reserve_symbol_table, "ENDPROCEDURE",
-		       &(tokens[ENDPROCEDURE]));
+		       AS_PTR(ENDPROCEDURE));
   g_hash_table_insert (reserve_symbol_table, "КОНЕЦФУНКЦИИ",
-		       &(tokens[ENDFUNCTION]));
+		       AS_PTR(ENDFUNCTION));
   g_hash_table_insert (reserve_symbol_table, "ENDFUNCTION",
-		       &(tokens[ENDFUNCTION]));
-  g_hash_table_insert (reserve_symbol_table, "ПЕРЕМ", &(tokens[VAR]));
-  g_hash_table_insert (reserve_symbol_table, "VAR", &(tokens[VAR]));
+		       AS_PTR(ENDFUNCTION));
+  g_hash_table_insert (reserve_symbol_table, "ПЕРЕМ", AS_PTR(VAR));
+  g_hash_table_insert (reserve_symbol_table, "VAR", AS_PTR(VAR));
   g_hash_table_insert (reserve_symbol_table, "ПЕРЕЙТИ",
-		       &(tokens[GOTO]));
-  g_hash_table_insert (reserve_symbol_table, "GOTO", &(tokens[GOTO]));
+		       AS_PTR(GOTO));
+  g_hash_table_insert (reserve_symbol_table, "GOTO", AS_PTR(GOTO));
   g_hash_table_insert (reserve_symbol_table, "ВОЗВРАТ",
-		       &(tokens[RETURN]));
-  g_hash_table_insert (reserve_symbol_table, "RETURN", &(tokens[RETURN]));
-  g_hash_table_insert (reserve_symbol_table, "И", &(tokens[AND]));
-  g_hash_table_insert (reserve_symbol_table, "AND", &(tokens[AND]));
-  g_hash_table_insert (reserve_symbol_table, "ИЛИ", &(tokens[OR]));
-  g_hash_table_insert (reserve_symbol_table, "OR", &(tokens[OR]));
-  g_hash_table_insert (reserve_symbol_table, "НЕ", &(tokens[NOT]));
-  g_hash_table_insert (reserve_symbol_table, "NOT", &(tokens[NOT]));
+		       AS_PTR(RETURN));
+  g_hash_table_insert (reserve_symbol_table, "RETURN", AS_PTR(RETURN));
+  g_hash_table_insert (reserve_symbol_table, "И", AS_PTR(AND));
+  g_hash_table_insert (reserve_symbol_table, "AND", AS_PTR(AND));
+  g_hash_table_insert (reserve_symbol_table, "ИЛИ", AS_PTR(OR));
+  g_hash_table_insert (reserve_symbol_table, "OR", AS_PTR(OR));
+  g_hash_table_insert (reserve_symbol_table, "НЕ", AS_PTR(NOT));
+  g_hash_table_insert (reserve_symbol_table, "NOT", AS_PTR(NOT));
   g_hash_table_insert (reserve_symbol_table, "ПОПЫТКА",
-		       &(tokens[TRY]));
-  g_hash_table_insert (reserve_symbol_table, "TRY", &(tokens[TRY]));
+		       AS_PTR(TRY));
+  g_hash_table_insert (reserve_symbol_table, "TRY", AS_PTR(TRY));
   g_hash_table_insert (reserve_symbol_table, "ИСКЛЮЧЕНИЕ",
-		       &(tokens[EXCEPT]));
-  g_hash_table_insert (reserve_symbol_table, "EXCEPT", &(tokens[EXCEPT]));
+		       AS_PTR(EXCEPT));
+  g_hash_table_insert (reserve_symbol_table, "EXCEPT", AS_PTR(EXCEPT));
   g_hash_table_insert (reserve_symbol_table,
 		       "ВЫЗВАТЬИСКЛЮЧЕНИЕ",
-		       &(tokens[RAISE]));
-  g_hash_table_insert (reserve_symbol_table, "RAISE", &(tokens[RAISE]));
+		       AS_PTR(RAISE));
+  g_hash_table_insert (reserve_symbol_table, "RAISE", AS_PTR(RAISE));
   g_hash_table_insert (reserve_symbol_table, "КОНЕЦПОПЫТКИ",
-		       &(tokens[ENDTRY]));
-  g_hash_table_insert (reserve_symbol_table, "ENDTRY", &(tokens[ENDTRY]));
-  g_hash_table_insert (reserve_symbol_table, "НОВЫЙ", &(tokens[NEW]));
-  g_hash_table_insert (reserve_symbol_table, "NEW", &(tokens[NEW]));
+		       AS_PTR(ENDTRY));
+  g_hash_table_insert (reserve_symbol_table, "ENDTRY", AS_PTR(ENDTRY));
+  g_hash_table_insert (reserve_symbol_table, "НОВЫЙ", AS_PTR(NEW));
+  g_hash_table_insert (reserve_symbol_table, "NEW", AS_PTR(NEW));
   g_hash_table_insert (reserve_symbol_table, "ВЫПОЛНИТЬ",
-		       &(tokens[EXECUTE]));
-  g_hash_table_insert (reserve_symbol_table, "EXECUTE", &(tokens[EXECUTE]));
+		       AS_PTR(EXECUTE));
+  g_hash_table_insert (reserve_symbol_table, "EXECUTE", AS_PTR(EXECUTE));
   g_hash_table_insert (reserve_symbol_table,
 		       "ДОБАВИТЬОБРАБОТЧИК",
-		       &(tokens[ADDHANDLER]));
+		       AS_PTR(ADDHANDLER));
   g_hash_table_insert (reserve_symbol_table, "ADDHANDLER",
-		       &(tokens[ADDHANDLER]));
+		       AS_PTR(ADDHANDLER));
   g_hash_table_insert (reserve_symbol_table,
 		       "УДАЛИТЬОБРАБОТЧИК",
-		       &(tokens[REMOVEHANDLER]));
+		       AS_PTR(REMOVEHANDLER));
   g_hash_table_insert (reserve_symbol_table, "REMOVEHANDLER",
-		       &(tokens[REMOVEHANDLER]));
+		       AS_PTR(REMOVEHANDLER));
 //TYPE
-  g_hash_table_insert (reserve_symbol_table, "NULL", &(tokens[T_NULL]));
+  g_hash_table_insert (reserve_symbol_table, "NULL", AS_PTR(T_NULL));
   g_hash_table_insert (reserve_symbol_table, "ИСТИНА",
-		       &(tokens[T_TRUE]));
-  g_hash_table_insert (reserve_symbol_table, "TRUE", &(tokens[T_TRUE]));
-  g_hash_table_insert (reserve_symbol_table, "ЛОЖЬ", &(tokens[T_FALSE]));
-  g_hash_table_insert (reserve_symbol_table, "FALSE", &(tokens[T_FALSE]));
+		       AS_PTR(T_TRUE));
+  g_hash_table_insert (reserve_symbol_table, "TRUE", AS_PTR(T_TRUE));
+  g_hash_table_insert (reserve_symbol_table, "ЛОЖЬ", AS_PTR(T_FALSE));
+  g_hash_table_insert (reserve_symbol_table, "FALSE", AS_PTR(T_FALSE));
   g_hash_table_insert (reserve_symbol_table, "НЕОПРЕДЕЛЕНО",
-		       &(tokens[T_UNDEFINED]));
+		       AS_PTR(T_UNDEFINED));
   g_hash_table_insert (reserve_symbol_table, "UNDEFINED",
-		       &(tokens[T_UNDEFINED]));
+		       AS_PTR(T_UNDEFINED));
   g_hash_table_insert (reserve_symbol_table, "ЭКСПОРТ",
-		       &(tokens[EXPORT]));
-  g_hash_table_insert (reserve_symbol_table, "EXPORT", &(tokens[EXPORT]));
-  g_hash_table_insert (reserve_symbol_table, "ЗНАЧ", &(tokens[VAL]));
-  g_hash_table_insert (reserve_symbol_table, "VAL", &(tokens[VAL]));
+		       AS_PTR(EXPORT));
+  g_hash_table_insert (reserve_symbol_table, "EXPORT", AS_PTR(EXPORT));
+  g_hash_table_insert (reserve_symbol_table, "ЗНАЧ", AS_PTR(VAL));
+  g_hash_table_insert (reserve_symbol_table, "VAL", AS_PTR(VAL));
 
 //DIRECTIVE
   g_hash_table_insert (reserve_symbol_table, "&НАКЛИЕНТЕ",
-		       &(tokens[ATCLIENT]));
+		       AS_PTR(ATCLIENT));
   g_hash_table_insert (reserve_symbol_table, "&ATCLIENT",
-		       &(tokens[ATCLIENT]));
+		       AS_PTR(ATCLIENT));
   g_hash_table_insert (reserve_symbol_table, "&НАСЕРВЕРЕ",
-		       &(tokens[ATSERVER]));
+		       AS_PTR(ATSERVER));
   g_hash_table_insert (reserve_symbol_table, "&ATSERVER",
-		       &(tokens[ATSERVER]));
+		       AS_PTR(ATSERVER));
   g_hash_table_insert (reserve_symbol_table,
 		       "&НАСЕРВЕРЕБЕЗКОНТЕКСТА",
-		       &(tokens[ATSERVERNOCONTEXT]));
+		       AS_PTR(ATSERVERNOCONTEXT));
   g_hash_table_insert (reserve_symbol_table, "&ATSERVERNOCONTEXT",
-		       &(tokens[ATSERVERNOCONTEXT]));
+		       AS_PTR(ATSERVERNOCONTEXT));
   g_hash_table_insert (reserve_symbol_table,
 		       "&НАКЛИЕНТЕНАСЕРВЕРЕБЕЗКОНТЕКСТА",
-		       &(tokens[ATCLIENTATSERVERNOCONTEXT]));
+		       AS_PTR(ATCLIENTATSERVERNOCONTEXT));
   g_hash_table_insert (reserve_symbol_table, "&ATCLIENTATSERVERNOCONTEXT",
-		       &(tokens[ATCLIENTATSERVERNOCONTEXT]));
+		       AS_PTR(ATCLIENTATSERVERNOCONTEXT));
   g_hash_table_insert (reserve_symbol_table,
 		       "&НАКЛИЕНТЕНАСЕРВЕРЕ",
-		       &(tokens[ATCLIENTATSERVER]));
+		       AS_PTR(ATCLIENTATSERVER));
   g_hash_table_insert (reserve_symbol_table, "&ATCLIENTATSERVER",
-		       &(tokens[ATCLIENTATSERVER]));
-}
+		       AS_PTR(ATCLIENTATSERVER));
+
 
 void
 init_lex (char *file_name)
@@ -448,9 +289,11 @@ destroy_lex ()
 
 /*!include:re2c "unicode_categories.re" */
 
-token *
-get_token ()
+int
+yylex (YYSTYPE *lvalp, YYLTYPE *llocp)
 {
+  llocp->first_line = line;
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 loop:
@@ -459,7 +302,7 @@ loop:
     start_pos = end_pos;
 
   if (start_pos == limit)
-    return NULL;
+    return YYEOF;
 
   const char *YYCURSOR = start_pos, *YYLIMIT = limit, *YYMARKER;
   /*!re2c
@@ -478,7 +321,7 @@ loop:
      right_square_bracket = ']';
      whitespace = [ ]+;
      tab = [\t]+;
-     newline = [\n]+;
+     newline = [\n];
      lt = '<';
      le = [<][=];
      eq = '=';
@@ -495,56 +338,44 @@ loop:
      number = digits([\.]digits)?;
      date = ['] [^']+ ['];
      literal = ["] ([^"] | ["]["])* ["];
-     preprocessor = [#][^\n]+;
      id = [^'"\.,:;()\[\] \t\n=<>+\-*\/%&#~]+;
      mark = [~] id;
      directive = [&] id;
+     preprocessor = [#][^\n]+;
 
      comment { end_pos = YYCURSOR; goto loop; }
-     point { end_pos = YYCURSOR; return &(tokens[POINT]); }
-     comma { end_pos = YYCURSOR; return &(tokens[COMMA]); }
-     colon { end_pos = YYCURSOR; return &(tokens[COLON]); }
-     semicolon { end_pos = YYCURSOR; return &(tokens[SEMICOLON]); }
-     left_parenthesis { end_pos = YYCURSOR; return &(tokens[LEFT_PARENTHESIS]); }
-     right_parenthesis { end_pos = YYCURSOR; return &(tokens[RIGHT_PARENTHESIS]); }
-     left_square_bracket { end_pos = YYCURSOR; return &(tokens[LEFT_SQUARE_BRACKET]); }
-     right_square_bracket { end_pos = YYCURSOR; return &(tokens[RIGHT_SQUARE_BRACKET]); }
-     whitespace { end_pos = YYCURSOR; return &(tokens[WHITESPACE]); }
-     tab { end_pos = YYCURSOR; return &(tokens[TAB]); }
-     newline { line += YYCURSOR - start_pos ; end_pos = YYCURSOR; goto loop; }
-     lt { end_pos = YYCURSOR; return (token *) &(tokens_attr[LT]); }
-     le { end_pos = YYCURSOR; return (token *) &(tokens_attr[LE]); }
-     eq { end_pos = YYCURSOR; return (token *) &(tokens_attr[EQ]); }
-     ne { end_pos = YYCURSOR; return (token *) &(tokens_attr[NE]); }
-     gt { end_pos = YYCURSOR; return (token *) &(tokens_attr[GT]); }
-     ge { end_pos = YYCURSOR; return (token *) &(tokens_attr[GE]); }
-     plus { end_pos = YYCURSOR; return (token *) &(tokens_attr[PLUS]); }
-     minus { end_pos = YYCURSOR; return (token *) &(tokens_attr[MINUS]); }
-     multiply { end_pos = YYCURSOR; return (token *) &(tokens_attr[MULTIPLY]); }
-     division { end_pos = YYCURSOR; return (token *) &(tokens_attr[DIVISION]); }
-     remainder_of_division { end_pos = YYCURSOR; return (token *) &(tokens_attr[REMAINDER_OF_DIVISION]); }
-     number { end_pos = YYCURSOR; return (token *) create_token_table(NUMBER); }
-     date { end_pos = YYCURSOR; return (token *) create_token_table(DATE); }
-     literal { end_pos = YYCURSOR; return (token *) create_token_table(LITERAL); }
-     preprocessor { end_pos = YYCURSOR; return (token *) create_token_table(PREPROCESSOR); }
-     directive { end_pos = YYCURSOR; return (token *) create_token_table(DIRECTIVE); }
-     mark { end_pos = YYCURSOR; return (token *) create_token_table(MARK); }
-     id { end_pos = YYCURSOR; return (token *) create_token_table(ID); }
-     $ { end_pos = YYCURSOR; return &(tokens[END]); }
-     *  { end_pos = YYCURSOR; return &(tokens[ERROR]); }
+     point { end_pos = YYCURSOR; return AS_TOKEN('.'); }
+     comma { end_pos = YYCURSOR; return AS_TOKEN(','); }
+     colon { end_pos = YYCURSOR; return AS_TOKEN(':'); }
+     semicolon { end_pos = YYCURSOR; return AS_TOKEN(';'); }
+     left_parenthesis { end_pos = YYCURSOR; return AS_TOKEN('('); }
+     right_parenthesis { end_pos = YYCURSOR; return AS_TOKEN(')'); }
+     left_square_bracket { end_pos = YYCURSOR; return AS_TOKEN('['); }
+     right_square_bracket { end_pos = YYCURSOR; return AS_TOKEN(']'); }
+     whitespace { end_pos = YYCURSOR; goto loop; }
+     tab { end_pos = YYCURSOR; goto loop; }
+     newline { line++ ; end_pos = YYCURSOR; goto loop; }
+     lt { end_pos = YYCURSOR; return AS_TOKEN('<'); }
+     le { end_pos = YYCURSOR; return LE; }
+     eq { end_pos = YYCURSOR; return AS_TOKEN('='); }
+     ne { end_pos = YYCURSOR; return NE; }
+     gt { end_pos = YYCURSOR; return AS_TOKEN('>'); }
+     ge { end_pos = YYCURSOR; return GE; }
+     plus { end_pos = YYCURSOR; return AS_TOKEN('+'); }
+     minus { end_pos = YYCURSOR; return AS_TOKEN('-'); }
+     multiply { end_pos = YYCURSOR; return AS_TOKEN('*'); }
+     division { end_pos = YYCURSOR; return AS_TOKEN('/'); }
+     remainder_of_division { end_pos = YYCURSOR; return AS_TOKEN('%'); }
+     number { end_pos = YYCURSOR; return (token *) get_token(NUMBER, lvalp, llocp); }
+     date { end_pos = YYCURSOR; return (token *) get_token(DATE, lvalp, llocp); }
+     literal { end_pos = YYCURSOR; return (token *) get_token(LITERAL, lvalp, llocp); }
+     preprocessor { end_pos = YYCURSOR; return (token *) get_token(PREPROCESSOR, lvalp, llocp); }
+     directive { end_pos = YYCURSOR; return (token *) get_token(DIRECTIVE, lvalp, llocp); }
+     mark { end_pos = YYCURSOR; return (token *) get_token(MARK, lvalp, llocp); }
+     id { end_pos = YYCURSOR; return (token *) get_token(ID, lvalp, llocp); }
+     $ { end_pos = YYCURSOR; return YYEOF; }
+     *  { end_pos = YYCURSOR; return YYUNDEF; }
    */
 #pragma GCC diagnostic pop
 }
 
-void
-print_token (token * tok, int fd_log)
-{
-  if (tok->tag < RELOP)
-    dprintf (fd_log, "%ld(%s)\n", line, tag_text[tok->tag]);
-  else if (tok->tag < NUMBER)
-    dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
-	     tag_attr_text[((token_attr *) tok)->attr]);
-  else
-    dprintf (fd_log, "%ld(%s):%s\n", line, tag_text[tok->tag],
-	     ((token_table *) tok)->text);
-}
