@@ -4,18 +4,22 @@
   #include <stdio.h>
   #include <ctype.h>
   #include <stdlib.h>
-int yylex (YYSTYPE *lvalp, YYLTYPE *llocp);
-void yyerror (YYLTYPE *locp, char const *msg);
 %}
 
+%code provides {
+  int yylex (YYSTYPE *lvalp, YYLTYPE *llocp);
+  void yyerror (YYLTYPE *locp, char const *msg);
+}
+
 /* Bison declarations. */
+%language "c"
 %verbose
 %define parse.trace
 %header
 %output "syn.c"
 %define api.pure full
 %define api.value.type {char *}
-%printer { fprintf (yyo, "%s", $$); } NUMBER DATE LITERAL PREPROCESSOR ID MARK;
+%printer { fprintf (yyo, "%d:%s", @$.first_line, $$); } NUMBER DATE LITERAL PREPROCESSOR ID MARK;
 %token 
 ','
 ':'
@@ -115,8 +119,14 @@ exp:
 | '(' exp ')'        { $$ = $2;           }
 ;
 */
+
+input:
+  %empty
+| input all_token
+;
+
 all_token:
-|','
+','
 |':'
 |';'
 |'('
@@ -198,14 +208,6 @@ all_token:
 ;
 
 %%
-
-int
-main (void)
-{
-yydebug=1;
-  return yyparse ();
-}
-
 
 /* Called by yyparse on error. */
 void
