@@ -15,6 +15,8 @@
 %language "c"
 %verbose
 %define parse.trace
+%define lr.type ielr
+%define parse.lac full
 %header
 %output "syn.c"
 %define api.pure full

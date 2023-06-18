@@ -50,3 +50,4 @@ clean:
 	rm ./tests/lex_test/log;
 	rm syn.h;
 	rm syn.c;
+	rm syn.output;
