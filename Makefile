@@ -24,30 +24,29 @@ generic_files:
 	re2c ./lex.l -o ./lex.c -8 --case-ranges -i
 
 build_test:
-	$(CC) $(CFLAGS) $(GLIB_CONF) ./tests/lex_test/main.c syn.c lex.c print_error.c $(GLIB_LIB) $(PCRE_LIB) -o ./tests/lex_test/test
+	$(CC) $(CFLAGS) $(GLIB_CONF) ./tests/main.c syn.c lex.c print_error.c $(GLIB_LIB) $(PCRE_LIB) -o ./tests/test
 
 test01:
-	./tests/lex_test/test ./tests/lex_test/module01 ./tests/lex_test/log
+	./tests/test ./tests/module01
 
 test01_m:
-	valgrind --leak-check=full ./tests/lex_test/test ./tests/lex_test/module01 ./tests/lex_test/log
+	valgrind --leak-check=full ./tests/test ./tests/module01
 
 test02:
-	./tests/lex_test/test ./tests/lex_test/module02 ./tests/lex_test/log
+	./tests/test ./tests/module02
 
 test02_m:
-	valgrind --leak-check=full ./tests/lex_test/test ./tests/lex_test/module02 ./tests/lex_test/log
+	valgrind --leak-check=full ./tests/test ./tests/module02
 
 test03:
-	./tests/lex_test/test ./tests/lex_test/module03 ./tests/lex_test/log
+	./tests/test ./tests/module03
 
 test03_m:
-	valgrind --leak-check=full ./tests/lex_test/test ./tests/lex_test/module03 ./tests/lex_test/log
+	valgrind --leak-check=full ./tests/test ./tests/module03
 
 clean:
-	rm ./tests/lex_test/test;
+	rm ./tests/test;
 	rm lex.c; 
-	rm ./tests/lex_test/log;
 	rm syn.h;
 	rm syn.c;
 	rm syn.output;
