@@ -83,14 +83,18 @@ MARK
 ID			
 %precedence THEN
 %precedence ELSE
-%right ASG        /* ASSIGNMENT(=) */
+//ASSIGNMENT(=) 
+%right ASG        
+//LOGIC
 %left OR
 %left AND
 %left NOT
+//COMPARE
 %left '<' '>' '=' LE GE NE
 %left '+' '-'
 %left '*' '/' '%'
 %precedence NEG APR  /* negation--unary minus; approval--unari plus */
+//DEREFERENCING
 %precedence '.'  /* call method */
 
 %% /* The grammar follows. */
@@ -105,31 +109,45 @@ line
 ;
 
 line:
-  end_line
-| expr end_line  { printf ("%s\n", "строка expr обработана"); }
-| stmt end_line  { printf ("%s\n", "строка stmt обработана"); }
-;
-
-end_line:
 ';'
+| assignment { printf ("%s\n", "строка assignment обработана"); }
 ;
 
-expr:
+assignment:
+ID '=' exp ';' %prec ASG         {printf("ASG(math) %s=\n", $1);}
+;
+
+exp:
+math
+| logic;
+
+math:
   NUMBER
 | ID
-| expr '=' expr         {printf("%s=%s\n", $1, $3);}
+| math '+' math        {printf("%s+%s\n", $1, $3);}
+| math '-' math        {printf("%s-%s\n", $1, $3);}
+| math '*' math        {printf("%s*%s\n", $1, $3);}
+| math '/' math        {printf("%s/%s\n", $1, $3);}
+| '-' math  %prec NEG  {printf("-%s\n", $2);}
+| '+' math  %prec APR  {printf("+%s\n", $2);}
+| '(' math ')'         {printf("(%s)\n", $2); $$ = $2;}
 ;
 
-stmt:
-expr
-| stmt '=' stmt         {printf("%s=%s\n", $1, $3);}
-| stmt '+' stmt        {printf("%s+%s\n", $1, $3);}
-| stmt '-' stmt        {printf("%s-%s\n", $1, $3);}
-| stmt '*' stmt        {printf("%s*%s\n", $1, $3);}
-| stmt '/' stmt        {printf("%s/%s\n", $1, $3);}
-| '-' stmt  %prec NEG {printf("-%s\n", $2);}
-| '(' stmt ')'        {printf("(%s)\n", $2);}
-;
+compare:
+| math '<' math {printf("%s<%s\n", $1, $3);}
+| math '>' math {printf("%s>%s\n", $1, $3);}
+| math '=' math {printf("%s=%s\n", $1, $3);}
+| math LE math  {printf("%s<=%s\n", $1, $3);}
+| math GE math  {printf("%s>=%s\n", $1, $3);}
+| math NE math  {printf("%s<>%s\n", $1, $3);}
+
+logic:
+T_TRUE	                {printf("%s\n", "TRUE");}
+| T_FALSE		{printf("%s\n", "FALSE");}
+| compare               {printf("%s\n", "COMPARE");}
+| logic OR logic        {printf("%s OR %s\n", $1, $3);}
+| logic AND logic       {printf("%s AND%s\n", $1, $3);}
+| NOT logic             {printf("NOT %s\n", "NOT %s", $2);}
 
 /*
 input:
