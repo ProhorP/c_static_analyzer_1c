@@ -6,7 +6,7 @@ PCRE_LIB=`pcre-config --libs`
 
 all: test
 
-test: generic_files build_test test01 test02 test03 
+test: generic_files build_test test01
 
 memory_leak_test: generic_files build_test test01_m test02_m test03_m 
 

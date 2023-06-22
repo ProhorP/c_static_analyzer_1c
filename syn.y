@@ -13,7 +13,7 @@
 
 /* Bison declarations. */
 %language "c"
-%verbose
+//%verbose
 %define parse.trace
 %define lr.type ielr
 %define parse.lac full
@@ -32,9 +32,7 @@
 ']'
 //IF
 IF			
-THEN			
 ELSIF			
-ELSE			
 ENDIF			
 //DO
 FOR			
@@ -83,6 +81,8 @@ PREPROCESSOR
 DIRECTIVE			
 MARK			
 ID			
+%precedence THEN
+%precedence ELSE
 %right ASG        /* ASSIGNMENT(=) */
 %left OR
 %left AND
@@ -94,34 +94,44 @@ ID
 %precedence '.'  /* call method */
 
 %% /* The grammar follows. */
-/*
+
 input:
   %empty
-| input line
+| input any_block
+;
+
+any_block:
+line
 ;
 
 line:
   end_line
-| exp end_line  { printf ("%d:\t%.10g\n", @$.first_line, $1); }
+| expr end_line  { printf ("%s\n", "строка expr обработана"); }
+| stmt end_line  { printf ("%s\n", "строка stmt обработана"); }
 ;
 
 end_line:
-'\n'
-|';'
+';'
 ;
 
-exp:
-  NUM
-| exp '+' exp        { $$ = $1 + $3;      }
-| exp '-' exp        { $$ = $1 - $3;      }
-| exp '*' exp        { $$ = $1 * $3;      }
-| exp '/' exp        { $$ = $1 / $3;      }
-| '-' exp  %prec NEG { $$ = -$2;          }
-| exp '^' exp        { $$ = pow ($1, $3); }
-| '(' exp ')'        { $$ = $2;           }
+expr:
+  NUMBER
+| ID
+| expr '=' expr         {printf("%s=%s\n", $1, $3);}
 ;
-*/
 
+stmt:
+expr
+| stmt '=' stmt         {printf("%s=%s\n", $1, $3);}
+| stmt '+' stmt        {printf("%s+%s\n", $1, $3);}
+| stmt '-' stmt        {printf("%s-%s\n", $1, $3);}
+| stmt '*' stmt        {printf("%s*%s\n", $1, $3);}
+| stmt '/' stmt        {printf("%s/%s\n", $1, $3);}
+| '-' stmt  %prec NEG {printf("-%s\n", $2);}
+| '(' stmt ')'        {printf("(%s)\n", $2);}
+;
+
+/*
 input:
   %empty
 | input all_token
@@ -208,7 +218,7 @@ all_token:
 |APR
 |'.'
 ;
-
+*/
 %%
 
 /* Called by yyparse on error. */
