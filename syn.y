@@ -31,7 +31,9 @@
 '['
 ']'
 //IF
-IF			
+IF
+THEN			
+ELSE
 ELSIF			
 ENDIF			
 //DO
@@ -81,8 +83,6 @@ PREPROCESSOR
 DIRECTIVE			
 MARK			
 ID			
-%precedence THEN
-%precedence ELSE
 //ASSIGNMENT(=) 
 %right ASG        
 //LOGIC
@@ -91,6 +91,7 @@ ID
 %left NOT
 //COMPARE
 %left '<' '>' '=' LE GE NE
+//MATH
 %left '+' '-'
 %left '*' '/' '%'
 %precedence NEG APR  /* negation--unary minus; approval--unari plus */
@@ -105,49 +106,47 @@ input:
 ;
 
 any_block:
-line
+line            { printf ("%s\n", "line обработана"); }
+|if_block       { printf ("%s\n", "if_block обработана"); }
+
 ;
 
 line:
 ';'
-| assignment { printf ("%s\n", "строка assignment обработана"); }
+| ID '=' expr ';' %prec ASG         {printf("ASG %s=\n", $1);}
 ;
 
-assignment:
-ID '=' exp ';' %prec ASG         {printf("ASG(math) %s=\n", $1);}
-;
-
-exp:
-math
-| logic;
-
-math:
+expr:
   NUMBER
 | ID
-| math '+' math        {printf("%s+%s\n", $1, $3);}
-| math '-' math        {printf("%s-%s\n", $1, $3);}
-| math '*' math        {printf("%s*%s\n", $1, $3);}
-| math '/' math        {printf("%s/%s\n", $1, $3);}
-| '-' math  %prec NEG  {printf("-%s\n", $2);}
-| '+' math  %prec APR  {printf("+%s\n", $2);}
-| '(' math ')'         {printf("(%s)\n", $2); $$ = $2;}
+| T_TRUE
+| T_FALSE
+| expr '+' expr        {printf("%s+%s\n", $1, $3);}
+| expr '-' expr        {printf("%s-%s\n", $1, $3);}
+| expr '*' expr        {printf("%s*%s\n", $1, $3);}
+| expr '/' expr        {printf("%s/%s\n", $1, $3);}
+| '-' expr  %prec NEG  {printf("-%s\n", $2);}
+| '+' expr  %prec APR  {printf("+%s\n", $2);}
+| '(' expr ')'         {printf("(%s)\n", $2); $$ = $2;}
+| expr '<' expr        {printf("%s<%s\n", $1, $3);}
+| expr '>' expr        {printf("%s>%s\n", $1, $3);}
+| expr '=' expr        {printf("%s=%s\n", $1, $3);}
+| expr LE expr         {printf("%s<=%s\n", $1, $3);}
+| expr GE expr         {printf("%s>=%s\n", $1, $3);}
+| expr NE expr         {printf("%s<>%s\n", $1, $3);}
+| expr OR expr         {printf("%s OR %s\n", $1, $3);}
+| expr AND expr        {printf("%s AND%s\n", $1, $3);}
+| NOT expr             {printf("NOT %s\n", $2);}
+
+if:
+  IF expr THEN input
+| if ELSIF expr THEN input
 ;
 
-compare:
-| math '<' math {printf("%s<%s\n", $1, $3);}
-| math '>' math {printf("%s>%s\n", $1, $3);}
-| math '=' math {printf("%s=%s\n", $1, $3);}
-| math LE math  {printf("%s<=%s\n", $1, $3);}
-| math GE math  {printf("%s>=%s\n", $1, $3);}
-| math NE math  {printf("%s<>%s\n", $1, $3);}
-
-logic:
-T_TRUE	                {printf("%s\n", "TRUE");}
-| T_FALSE		{printf("%s\n", "FALSE");}
-| compare               {printf("%s\n", "COMPARE");}
-| logic OR logic        {printf("%s OR %s\n", $1, $3);}
-| logic AND logic       {printf("%s AND%s\n", $1, $3);}
-| NOT logic             {printf("NOT %s\n", "NOT %s", $2);}
+if_block:
+if ENDIF
+| if ELSE input ENDIF
+;
 
 /*
 input:
