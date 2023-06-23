@@ -1,9 +1,9 @@
 /* Infix notation calculator. */
 
 %{
-  #include <stdio.h>
-  #include <ctype.h>
-  #include <stdlib.h>
+//  #include <stdio.h>
+ // #include <ctype.h>
+ // #include <stdlib.h>
 %}
 
 %code provides {
@@ -13,7 +13,7 @@
 
 /* Bison declarations. */
 %language "c"
-//%verbose
+%verbose
 %define parse.trace
 %define lr.type ielr
 %define parse.lac full
@@ -111,6 +111,9 @@ line            { printf ("%s\n", "line обработана"); }
 |while_block       { printf ("%s\n", "while_block обработана"); }
 |for_block       { printf ("%s\n", "for_block обработана"); }
 |foreach_block       { printf ("%s\n", "foreach_block обработана"); }
+|BREAK		{ printf ("%s\n", "BREAK обработана"); }
+|CONTINUE       { printf ("%s\n", "CONTINUE обработана"); }
+	
 ;
 
 line:
