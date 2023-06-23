@@ -108,7 +108,9 @@ input:
 any_block:
 line            { printf ("%s\n", "line обработана"); }
 |if_block       { printf ("%s\n", "if_block обработана"); }
-
+|while_block       { printf ("%s\n", "while_block обработана"); }
+|for_block       { printf ("%s\n", "for_block обработана"); }
+|foreach_block       { printf ("%s\n", "foreach_block обработана"); }
 ;
 
 line:
@@ -148,94 +150,18 @@ if ENDIF
 | if ELSE input ENDIF
 ;
 
-/*
-input:
-  %empty
-| input all_token
+while_block:
+WHILE expr DO input ENDDO
 ;
 
-all_token:
-','
-|':'
-|';'
-|'('
-|')'
-|'['
-|']'
-//IF
-|IF			
-|THEN			
-|ELSIF			
-|ELSE			
-|ENDIF			
-//DO
-|FOR			
-|EACH			
-|IN			
-|TO			
-|WHILE			
-|DO			
-|BREAK			
-|CONTINUE			
-|ENDDO			
-//FUNCTION
-|PROCEDURE		
-|FUNCTION			
-|ENDPROCEDURE	
-|ENDFUNCTION		
-|VAR			
-|GOTO			
-|RETURN			
-|TRY			
-|EXCEPT			
-|RAISE			
-|ENDTRY			
-|NEW			
-|EXECUTE			
-|ADDHANDLER		
-|REMOVEHANDLER		
-//type
-|T_NULL
-|T_TRUE	
-|T_FALSE		
-|T_UNDEFINED		
-|EXPORT			
-|VAL			
-//DIRECTIVE
-|ATCLIENT			
-|ATSERVER			
-|ATSERVERNOCONTEXT		
-|ATCLIENTATSERVERNOCONTEXT	
-|ATCLIENTATSERVER		
-//OTHER
-|NUMBER			
-|DATE			
-|LITERAL			
-|PREPROCESSOR		
-|DIRECTIVE			
-|MARK			
-|ID			
-//tokens with priorities
-|ASG
-|OR
-|AND
-|NOT
-|'<'
-|'>'
-|'='
-|LE
-|GE
-|NE
-|'+'
-|'-'
-|'*'
-|'/'
-|'%'
-|NEG
-|APR
-|'.'
+for_block:
+FOR ID '=' expr TO expr DO input ENDDO
 ;
-*/
+
+foreach_block:
+FOR EACH ID IN ID DO input ENDDO
+;
+
 %%
 
 /* Called by yyparse on error. */
