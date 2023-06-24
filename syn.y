@@ -158,6 +158,7 @@ expr:
 | expr OR expr         {printf("%s OR %s\n", $1, $3);}
 | expr AND expr        {printf("%s AND%s\n", $1, $3);}
 | NOT expr             {printf("NOT %s\n", $2);}
+;
 
 if:
   IF expr THEN blocks

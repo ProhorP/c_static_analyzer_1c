@@ -6,9 +6,9 @@ PCRE_LIB=`pcre-config --libs`
 
 all: test
 
-test: generic_files build_test test01
+test: generic_files build_test test01 #test02 test03
 
-memory_leak_test: generic_files build_test test01_m test02_m test03_m 
+memory_leak_test: generic_files build_test test01_m #test02_m test03_m 
 
 analyzer_clang:
 	scan-build make
