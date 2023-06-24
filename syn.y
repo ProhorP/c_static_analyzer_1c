@@ -182,8 +182,8 @@ FOR EACH ID IN ID DO blocks ENDDO
 ;
 
 proc_block:
-PROCEDURE ID '(' all_params ')' blocks ENDPROCEDURE {printf("import procedure %s\n", $2);}
-| PROCEDURE ID '(' all_params ')' EXPORT blocks ENDPROCEDURE {printf("export procedure %s\n", $2);}
+PROCEDURE ID '(' params ')' blocks ENDPROCEDURE {printf("import procedure %s\n", $2);}
+| PROCEDURE ID '(' params ')' EXPORT blocks ENDPROCEDURE {printf("export procedure %s\n", $2);}
 ;
 
 func_block:
