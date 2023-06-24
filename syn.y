@@ -106,6 +106,12 @@ input:
 ;
 
 any_block:
+proc_block
+| func_block
+| block
+;
+
+block:
 line            { printf ("%s\n", "line обработана"); }
 |if_block       { printf ("%s\n", "if_block обработана"); }
 |while_block       { printf ("%s\n", "while_block обработана"); }
@@ -113,7 +119,17 @@ line            { printf ("%s\n", "line обработана"); }
 |foreach_block       { printf ("%s\n", "foreach_block обработана"); }
 |BREAK		{ printf ("%s\n", "BREAK обработана"); }
 |CONTINUE       { printf ("%s\n", "CONTINUE обработана"); }
-	
+|RETURN         { printf ("%s\n", "RETURN обработана"); }
+;
+
+blocks:
+%empty
+| rblock
+;
+
+rblock:
+block
+| rblock block
 ;
 
 line:
@@ -144,27 +160,48 @@ expr:
 | NOT expr             {printf("NOT %s\n", $2);}
 
 if:
-  IF expr THEN input
-| if ELSIF expr THEN input
+  IF expr THEN blocks
+| if ELSIF expr THEN blocks
 ;
 
 if_block:
 if ENDIF
-| if ELSE input ENDIF
+| if ELSE blocks ENDIF
 ;
 
 while_block:
-WHILE expr DO input ENDDO
+WHILE expr DO blocks ENDDO
 ;
 
 for_block:
-FOR ID '=' expr TO expr DO input ENDDO
+FOR ID '=' expr TO expr DO blocks ENDDO
 ;
 
 foreach_block:
-FOR EACH ID IN ID DO input ENDDO
+FOR EACH ID IN ID DO blocks ENDDO
 ;
 
+proc_block:
+PROCEDURE ID '(' all_params ')' blocks ENDPROCEDURE {printf("import procedure %s\n", $2);}
+| PROCEDURE ID '(' all_params ')' EXPORT blocks ENDPROCEDURE {printf("export procedure %s\n", $2);}
+;
+
+func_block:
+FUNCTION ID '(' params ')' blocks ENDFUNCTION {printf("import function %s\n", $2);}
+| FUNCTION ID '(' params ')' EXPORT blocks ENDFUNCTION {printf("export function %s\n", $2);}
+;
+
+params:
+%empty
+| rparams
+;
+
+rparams:
+ID
+| VAL ID
+| rparams ',' ID
+| rparams ',' VAL ID
+;
 %%
 
 /* Called by yyparse on error. */
