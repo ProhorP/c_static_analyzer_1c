@@ -1,9 +1,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include "../lex.h"
+#include "../main.h"
 #include "../syn.h"
-#include "../print_error.h"
 
 int
 main (int argc, char **argv)

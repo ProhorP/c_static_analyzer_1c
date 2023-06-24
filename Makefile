@@ -24,7 +24,7 @@ generic_files:
 	re2c ./lex.l -o ./lex.c -8 --case-ranges -i
 
 build_test:
-	$(CC) $(CFLAGS) $(GLIB_CONF) ./tests/main.c syn.c lex.c print_error.c $(GLIB_LIB) $(PCRE_LIB) -o ./tests/test
+	$(CC) $(CFLAGS) $(GLIB_CONF) ./tests/test.c main.c syn.c lex.c $(GLIB_LIB) $(PCRE_LIB) -o ./tests/test
 
 test01:
 	./tests/test ./tests/module01
