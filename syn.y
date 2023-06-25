@@ -106,35 +106,57 @@ input:
 ;
 
 any_block:
-proc_block
+  proc_block
 | func_block
 | block
 ;
 
 block:
-line            { printf ("%s\n", "line обработана"); }
-|if_block       { printf ("%s\n", "if_block обработана"); }
-|while_block       { printf ("%s\n", "while_block обработана"); }
-|for_block       { printf ("%s\n", "for_block обработана"); }
-|foreach_block       { printf ("%s\n", "foreach_block обработана"); }
-|BREAK		{ printf ("%s\n", "BREAK обработана"); }
-|CONTINUE       { printf ("%s\n", "CONTINUE обработана"); }
-|RETURN         { printf ("%s\n", "RETURN обработана"); }
+  line            
+| if_block       { printf ("%s\n", "if_block обработана"); }
+| while_block       { printf ("%s\n", "while_block обработана"); }
+| for_block       { printf ("%s\n", "for_block обработана"); }
+| foreach_block       { printf ("%s\n", "foreach_block обработана"); }
+| try_block       { printf ("%s\n", "try_block обработана"); }
 ;
 
 blocks:
-%empty
+  %empty
 | rblock
 ;
 
 rblock:
-block
+  block
 | rblock block
 ;
 
 line:
-';'
+  ';'{ printf ("%s\n", "; обработана"); }
 | ID '=' expr ';' %prec ASG         {printf("ASG %s=\n", $1);}
+| goto       { printf ("%s\n", "goto обработана"); }
+| mark       { printf ("%s\n", "mark обработана"); }
+| new       { printf ("%s\n", "new обработана"); }
+| define_var          { printf ("%s\n", "define_var обработана"); }
+| BREAK		{ printf ("%s\n", "BREAK обработана"); }
+| CONTINUE       { printf ("%s\n", "CONTINUE обработана"); }
+| RETURN         { printf ("%s\n", "RETURN обработана"); }
+| RAISE          { printf ("%s\n", "RAISE обработана"); }
+;
+
+define_var:
+  VAR ID
+;
+
+goto:
+  GOTO MARK
+;
+
+mark:
+  MARK ':'
+;
+
+new:
+  ID '=' NEW ID
 ;
 
 expr:
@@ -166,43 +188,48 @@ if:
 ;
 
 if_block:
-if ENDIF
+  if ENDIF
 | if ELSE blocks ENDIF
 ;
 
 while_block:
-WHILE expr DO blocks ENDDO
+  WHILE expr DO blocks ENDDO
 ;
 
 for_block:
-FOR ID '=' expr TO expr DO blocks ENDDO
+  FOR ID '=' expr TO expr DO blocks ENDDO
 ;
 
 foreach_block:
-FOR EACH ID IN ID DO blocks ENDDO
+  FOR EACH ID IN ID DO blocks ENDDO
 ;
 
 proc_block:
-PROCEDURE ID '(' params ')' blocks ENDPROCEDURE {printf("import procedure %s\n", $2);}
+  PROCEDURE ID '(' params ')' blocks ENDPROCEDURE {printf("import procedure %s\n", $2);}
 | PROCEDURE ID '(' params ')' EXPORT blocks ENDPROCEDURE {printf("export procedure %s\n", $2);}
 ;
 
 func_block:
-FUNCTION ID '(' params ')' blocks ENDFUNCTION {printf("import function %s\n", $2);}
+  FUNCTION ID '(' params ')' blocks ENDFUNCTION {printf("import function %s\n", $2);}
 | FUNCTION ID '(' params ')' EXPORT blocks ENDFUNCTION {printf("export function %s\n", $2);}
 ;
 
 params:
-%empty
+  %empty
 | rparams
 ;
 
 rparams:
-ID
+  ID
 | VAL ID
 | rparams ',' ID
 | rparams ',' VAL ID
 ;
+
+try_block:
+  TRY blocks EXCEPT blocks ENDTRY
+;
+
 %%
 
 /* Called by yyparse on error. */
