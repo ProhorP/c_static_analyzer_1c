@@ -132,11 +132,16 @@ rblock:
 
 line:
   ';'{ printf ("%s\n", "; обработана"); }
-| ID '=' expr ';' %prec ASG         {printf("ASG %s=\n", $1);}
+| ID '=' expr ';' %prec ASG         {printf("ASG expr %s=\n", $1);}
+| ID '=' literal ';' %prec ASG         {printf("ASG literal %s=\n", $1);}
+| ID '=' dereference ';' %prec ASG         {printf("ASG dereference %s=\n", $1);}
 | goto       { printf ("%s\n", "goto обработана"); }
 | mark       { printf ("%s\n", "mark обработана"); }
 | new       { printf ("%s\n", "new обработана"); }
 | define_var          { printf ("%s\n", "define_var обработана"); }
+| execute { printf ("%s\n", "execute обработана"); }
+| addhandler{ printf ("%s\n", "addhandler обработана"); }
+| removehandler{ printf ("%s\n", "removehandler обработана"); }
 | BREAK		{ printf ("%s\n", "BREAK обработана"); }
 | CONTINUE       { printf ("%s\n", "CONTINUE обработана"); }
 | RETURN         { printf ("%s\n", "RETURN обработана"); }
@@ -174,12 +179,58 @@ expr:
 | expr '<' expr        {printf("%s<%s\n", $1, $3);}
 | expr '>' expr        {printf("%s>%s\n", $1, $3);}
 | expr '=' expr        {printf("%s=%s\n", $1, $3);}
+| t_lack '=' t_lack        {printf("%s=%s\n", $1, $3);}
+| expr '=' t_lack        {printf("%s=%s\n", $1, $3);}
+| t_lack '=' expr        {printf("%s=%s\n", $1, $3);}
 | expr LE expr         {printf("%s<=%s\n", $1, $3);}
 | expr GE expr         {printf("%s>=%s\n", $1, $3);}
 | expr NE expr         {printf("%s<>%s\n", $1, $3);}
+| t_lack NE t_lack         {printf("%s<>%s\n", $1, $3);}
+| t_lack NE expr         {printf("%s<>%s\n", $1, $3);}
+| expr NE t_lack         {printf("%s<>%s\n", $1, $3);}
 | expr OR expr         {printf("%s OR %s\n", $1, $3);}
 | expr AND expr        {printf("%s AND%s\n", $1, $3);}
 | NOT expr             {printf("NOT %s\n", $2);}
+;
+
+t_bool:
+  T_TRUE
+| T_FALSE
+;
+
+t_lack:
+  T_UNDEFINED
+| T_NULL
+;
+
+dereference:
+  ID '.' ID
+| dereference '.' ID
+;
+
+literal:
+  LITERAL
+| literal '+' LITERAL
+| literal '+' ID
+| literal '+' NUMBER
+| literal '+' DATE
+| literal '+' t_bool
+| literal '+' t_lack
+;
+
+addhandler:
+  ADDHANDLER dereference ',' ID
+| ADDHANDLER dereference ',' dereference
+;
+
+removehandler:
+  REMOVEHANDLER dereference ',' ID
+| REMOVEHANDLER dereference ',' dereference
+;
+
+execute:
+  EXECUTE '(' ID ')'
+| EXECUTE '(' literal ')'
 ;
 
 if:
