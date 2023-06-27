@@ -143,10 +143,19 @@ line:
 | execute { printf ("%s\n", "execute обработана"); }
 | addhandler{ printf ("%s\n", "addhandler обработана"); }
 | removehandler{ printf ("%s\n", "removehandler обработана"); }
+| directive{ printf ("%s\n", "directive обработана"); }
 | BREAK		{ printf ("%s\n", "BREAK обработана"); }
 | CONTINUE       { printf ("%s\n", "CONTINUE обработана"); }
 | RETURN         { printf ("%s\n", "RETURN обработана"); }
 | RAISE          { printf ("%s\n", "RAISE обработана"); }
+;
+
+directive:
+  ATCLIENT
+| ATSERVER
+| ATSERVERNOCONTEXT
+| ATCLIENTATSERVERNOCONTEXT
+| ATCLIENTATSERVER
 ;
 
 define_var:
