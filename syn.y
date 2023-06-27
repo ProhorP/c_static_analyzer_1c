@@ -134,7 +134,6 @@ line:
   ';'{ printf ("%s\n", "; обработана"); }
 | ID '=' expr ';' %prec ASG         {printf("ASG expr %s=\n", $1);}
 | ID '=' literal ';' %prec ASG         {printf("ASG literal %s=\n", $1);}
-| ID '=' dereference ';' %prec ASG         {printf("ASG dereference %s=\n", $1);}
 | ID '=' date ';' %prec ASG         {printf("ASG date %s=\n", $1);}
 | goto       { printf ("%s\n", "goto обработана"); }
 | mark       { printf ("%s\n", "mark обработана"); }
@@ -144,9 +143,11 @@ line:
 | addhandler{ printf ("%s\n", "addhandler обработана"); }
 | removehandler{ printf ("%s\n", "removehandler обработана"); }
 | directive{ printf ("%s\n", "directive обработана"); }
+| call  { printf ("%s\n", "call обработана"); }
+| RETURN ';'        { printf ("%s\n", "RETURN обработана"); }
+| RETURN call_val_param ';'     { printf ("%s\n", "RETURN VAL обработана"); }
 | BREAK		{ printf ("%s\n", "BREAK обработана"); }
 | CONTINUE       { printf ("%s\n", "CONTINUE обработана"); }
-| RETURN         { printf ("%s\n", "RETURN обработана"); }
 | RAISE          { printf ("%s\n", "RAISE обработана"); }
 ;
 
@@ -158,8 +159,14 @@ directive:
 | ATCLIENTATSERVER
 ;
 
+id_list:
+  ID
+| id_list ',' ID
+;
+
 define_var:
-  VAR ID
+  VAR id_list
+| VAR id_list EXPORT
 ;
 
 goto:
@@ -172,11 +179,18 @@ mark:
 
 new:
   ID '=' NEW ID
+| ID '=' NEW '(' id_list ')'
+;
+
+runtime_val:
+  ID
+| dereference
+| call
 ;
 
 expr:
-  NUMBER
-| ID
+runtime_val
+| NUMBER
 | t_bool
 | expr '+' expr        {printf("%s+%s\n", $1, $3);}
 | expr '-' expr        {printf("%s-%s\n", $1, $3);}
@@ -252,7 +266,7 @@ dereference:
 literal:
   LITERAL
 | literal '+' LITERAL
-| literal '+' ID
+| literal '+' runtime_val
 | literal '+' NUMBER
 | literal '+' DATE
 | literal '+' t_bool
@@ -263,10 +277,10 @@ date:
   DATE
 | date '+' NUMBER
 | date '+' t_bool
-| date '+' ID
+| date '+' runtime_val
 | date '-' NUMBER
 | date '-' t_bool
-| date '-' ID
+| date '-' runtime_val
 ;
 
 addhandler:
@@ -280,7 +294,7 @@ removehandler:
 ;
 
 execute:
-  EXECUTE '(' ID ')'
+  EXECUTE '(' runtime_val ')'
 | EXECUTE '(' literal ')'
 ;
 
@@ -303,29 +317,69 @@ for_block:
 ;
 
 foreach_block:
-  FOR EACH ID IN ID DO blocks ENDDO
+  FOR EACH ID IN runtime_val DO blocks ENDDO
 ;
 
 proc_block:
-  PROCEDURE ID '(' params ')' blocks ENDPROCEDURE {printf("import procedure %s\n", $2);}
-| PROCEDURE ID '(' params ')' EXPORT blocks ENDPROCEDURE {printf("export procedure %s\n", $2);}
+  PROCEDURE ID '(' define_params ')' blocks ENDPROCEDURE {printf("import procedure %s\n", $2);}
+| PROCEDURE ID '(' define_params ')' EXPORT blocks ENDPROCEDURE {printf("export procedure %s\n", $2);}
 ;
 
 func_block:
-  FUNCTION ID '(' params ')' blocks ENDFUNCTION {printf("import function %s\n", $2);}
-| FUNCTION ID '(' params ')' EXPORT blocks ENDFUNCTION {printf("export function %s\n", $2);}
+  FUNCTION ID '(' define_params ')' blocks ENDFUNCTION {printf("import function %s\n", $2);}
+| FUNCTION ID '(' define_params ')' EXPORT blocks ENDFUNCTION {printf("export function %s\n", $2);}
 ;
 
-params:
+define_params:
   %empty
-| rparams
+| define_rparams
 ;
 
-rparams:
+define_rparams:
   ID
+| ID '=' def_val_param
 | VAL ID
-| rparams ',' ID
-| rparams ',' VAL ID
+| VAL ID '=' def_val_param
+| define_rparams ',' ID
+| define_rparams ',' ID '=' def_val_param
+| define_rparams ',' VAL ID
+| define_rparams ',' VAL ID '=' def_val_param
+;
+
+def_val_param:
+  NUMBER
+| LITERAL
+| DATE
+| t_bool
+| t_lack
+;
+
+call:
+  ID '(' call_params ')'
+| dereference '(' call_params ')'
+;
+
+call_params:
+  %empty
+| call_rparams
+;
+
+call_rparams:
+  call_param_first
+| call_rparams ',' call_val_param
+| call_rparams ','
+;
+
+call_param_first:
+  call_val_param
+| ','
+;
+
+call_val_param:
+  literal
+| date
+| t_lack
+| expr
 ;
 
 try_block:
