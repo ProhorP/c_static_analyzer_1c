@@ -178,28 +178,48 @@ expr:
 | '(' expr ')'         {printf("(%s)\n", $2); $$ = $2;}
 | expr '<' expr        {printf("%s<%s\n", $1, $3);}
 | date '<' date        {printf("%s<%s\n", $1, $3);}
+| literal '<' literal        {printf("%s<%s\n", $1, $3);}
 | expr '>' expr        {printf("%s>%s\n", $1, $3);}
 | date '>' date        {printf("%s>%s\n", $1, $3);}
+| literal '>' literal        {printf("%s>%s\n", $1, $3);}
 | expr '=' expr        {printf("%s=%s\n", $1, $3);}
 | t_lack '=' t_lack        {printf("%s=%s\n", $1, $3);}
 | date '=' date        {printf("%s=%s\n", $1, $3);}
+| literal '=' literal        {printf("%s=%s\n", $1, $3);}
 | expr '=' t_lack        {printf("%s=%s\n", $1, $3);}
 | expr '=' date        {printf("%s=%s\n", $1, $3);}
+| expr '=' literal        {printf("%s=%s\n", $1, $3);}
 | t_lack '=' expr        {printf("%s=%s\n", $1, $3);}
 | date '=' expr        {printf("%s=%s\n", $1, $3);}
+| literal '=' expr        {printf("%s=%s\n", $1, $3);}
 | date '=' t_lack        {printf("%s=%s\n", $1, $3);}
+| literal '=' t_lack        {printf("%s=%s\n", $1, $3);}
 | t_lack '=' date        {printf("!!!%s=%s\n", $1, $3);}
+| t_lack '=' literal        {printf("!!!%s=%s\n", $1, $3);}
+| date '=' literal        {printf("!!!%s=%s\n", $1, $3);}
+| literal '=' date        {printf("!!!%s=%s\n", $1, $3);}
 | expr LE expr         {printf("%s<=%s\n", $1, $3);}
+| date LE date         {printf("%s<=%s\n", $1, $3);}
+| literal LE literal         {printf("%s<=%s\n", $1, $3);}
 | expr GE expr         {printf("%s>=%s\n", $1, $3);}
+| date GE date         {printf("%s>=%s\n", $1, $3);}
+| literal GE literal         {printf("%s>=%s\n", $1, $3);}
 | expr NE expr         {printf("%s<>%s\n", $1, $3);}
 | t_lack NE t_lack         {printf("%s<>%s\n", $1, $3);}
 | date NE date         {printf("%s<>%s\n", $1, $3);}
+| literal NE literal         {printf("%s<>%s\n", $1, $3);}
 | t_lack NE expr         {printf("%s<>%s\n", $1, $3);}
 | date NE expr         {printf("%s<>%s\n", $1, $3);}
+| literal NE expr         {printf("%s<>%s\n", $1, $3);}
 | expr NE t_lack         {printf("%s<>%s\n", $1, $3);}
 | expr NE date         {printf("%s<>%s\n", $1, $3);}
+| expr NE literal         {printf("%s<>%s\n", $1, $3);}
 | t_lack NE date         {printf("%s<>%s\n", $1, $3);}
+| t_lack NE literal         {printf("%s<>%s\n", $1, $3);}
 | date NE t_lack         {printf("%s<>%s\n", $1, $3);}
+| literal NE t_lack         {printf("%s<>%s\n", $1, $3);}
+| date NE literal         {printf("%s<>%s\n", $1, $3);}
+| literal NE date         {printf("%s<>%s\n", $1, $3);}
 | expr OR expr         {printf("%s OR %s\n", $1, $3);}
 | expr AND expr        {printf("%s AND%s\n", $1, $3);}
 | NOT expr             {printf("NOT %s\n", $2);}
