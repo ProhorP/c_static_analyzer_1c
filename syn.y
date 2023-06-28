@@ -143,7 +143,7 @@ line:
 | addhandler{ printf ("%s\n", "addhandler обработана"); }
 | removehandler{ printf ("%s\n", "removehandler обработана"); }
 | directive{ printf ("%s\n", "directive обработана"); }
-| call  { printf ("%s\n", "call обработана"); }
+| rcall  { printf ("%s\n", "rcall обработана"); }
 | RETURN ';'        { printf ("%s\n", "RETURN обработана"); }
 | RETURN call_val_param ';'     { printf ("%s\n", "RETURN VAL обработана"); }
 | BREAK		{ printf ("%s\n", "BREAK обработана"); }
@@ -186,7 +186,7 @@ new:
 runtime_val:
   ID
 | dereference
-| call
+| rcall
 ;
 
 expr:
@@ -355,9 +355,15 @@ def_val_param:
 | t_lack
 ;
 
+rcall:
+  call
+| rcall '.' call
+;
+
 call:
   ID '(' call_params ')'
 | dereference '(' call_params ')'
+| ID '.' EXECUTE '(' ')'
 ;
 
 call_params:
