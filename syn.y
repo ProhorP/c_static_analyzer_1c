@@ -149,6 +149,7 @@ line:
 | BREAK		{ printf ("%s\n", "BREAK обработана"); }
 | CONTINUE       { printf ("%s\n", "CONTINUE обработана"); }
 | RAISE          { printf ("%s\n", "RAISE обработана"); }
+| PREPROCESSOR          { printf ("%s\n", "PREPROCESSOR обработана"); }
 ;
 
 directive:
