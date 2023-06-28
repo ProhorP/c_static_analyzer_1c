@@ -1,9 +1,10 @@
 /* Infix notation calculator. */
 
 %{
-//  #include <stdio.h>
+ // #include <stdio.h>
  // #include <ctype.h>
  // #include <stdlib.h>
+  #include "main.h"
 %}
 
 %code provides {
@@ -132,12 +133,12 @@ rblock:
 
 line:
   ';'{ printf ("%s\n", "; обработана"); }
-| ID '=' expr ';' %prec ASG         {printf("ASG expr %s=\n", $1);}
-| ID '=' literal ';' %prec ASG         {printf("ASG literal %s=\n", $1);}
-| ID '=' date ';' %prec ASG         {printf("ASG date %s=\n", $1);}
+| ID '=' expr ';' %prec ASG         {printf("ASG expr %s=\n", $1); insert_dynamic_val_table($1, $3);}
+| ID '=' literal ';' %prec ASG         {printf("ASG literal %s=\n", $1); insert_dynamic_val_table($1, $3);}
+| ID '=' date ';' %prec ASG         {printf("ASG date %s=\n", $1); insert_dynamic_val_table($1, $3);}
+| ID '=' new ';' %prec ASG         {printf("ASG new %s=\n", $1); insert_dynamic_val_table($1, $3);}
 | goto       { printf ("%s\n", "goto обработана"); }
 | mark       { printf ("%s\n", "mark обработана"); }
-| new       { printf ("%s\n", "new обработана"); }
 | define_var          { printf ("%s\n", "define_var обработана"); }
 | execute { printf ("%s\n", "execute обработана"); }
 | addhandler{ printf ("%s\n", "addhandler обработана"); }
@@ -179,8 +180,8 @@ mark:
 ;
 
 new:
-  ID '=' NEW ID
-| ID '=' NEW '(' id_list ')'
+  NEW ID {$$ = $2;}
+| NEW '(' id_list ')'{$$ = $3;}
 ;
 
 runtime_val:
@@ -260,8 +261,14 @@ t_lack:
 ;
 
 dereference:
-  ID '.' ID
-| dereference '.' ID
+  ID '.' ID {
+    printf ("%s.%s\n", $1, $3);
+    $$ = check_dereference($1, $3, @3.first_line);
+}
+| dereference '.' ID {
+    printf("dereference.%s\n", $3);
+    $$ = check_dereference($1, $3, @3.first_line);
+}
 ;
 
 literal:
@@ -357,13 +364,13 @@ def_val_param:
 
 rcall:
   call
-| rcall '.' call
+| rcall '.' call{$$ = $3;}
 ;
 
 call:
   ID '(' call_params ')'
 | dereference '(' call_params ')'
-| ID '.' EXECUTE '(' ')'
+| ID '.' EXECUTE '(' ')'{$$ = $3;}
 ;
 
 call_params:
