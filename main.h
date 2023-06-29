@@ -15,8 +15,6 @@
 #define PRINT(...) 
 #endif
 
-void print_error (const char *format, ...);
-
 void init_lex (char *file_name);
 
 void destroy_lex (void);

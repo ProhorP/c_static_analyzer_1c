@@ -29,16 +29,6 @@ const char *end_pos = NULL;
 const char *limit = NULL;
 size_t line = 1;
 
-void
-print_error (const char *format, ...)
-{
-  va_list argptr;
-  va_start (argptr, format);
-  vprintf (format, argptr);
-  va_end (argptr);
-  exit (EXIT_FAILURE);
-}
-
 int
 get_token (int pre_token, YYSTYPE *lvalp, YYLTYPE *llocp)
 {
@@ -97,10 +87,9 @@ get_token (int pre_token, YYSTYPE *lvalp, YYLTYPE *llocp)
   if (token_val == NULL)
     {
       token_val = (char *)calloc (1, n + 1);
+      assert(token_val != NULL);
 
-      if (token_val == NULL)
-        print_error ("Не удалось выделить память под элемент таблицы");
-      else
+      if (token_val)
         {
           memcpy (token_val, start_pos, n);
           if (lexeme_upper)
@@ -241,6 +230,7 @@ void
 fill_symbol_table ()
 {
   choose_string = malloc (strlen ("ВЫБРАТЬ") + 1);
+  assert (choose_string != NULL);
   strcpy (choose_string, "ВЫБРАТЬ");
 
   // QUERY
@@ -250,16 +240,13 @@ fill_symbol_table ()
 void
 init_lex (char *file_name)
 {
-  if ((module_fd = open (file_name, O_RDONLY)) < 0)
-    print_error ("невозможно открыть %s для чтения", file_name);
+  module_fd = open (file_name, O_RDONLY);
+  assert(module_fd > 0);
 
-  if (fstat (module_fd, &statbuf) < 0)
-    print_error ("Ошибка вызова функции fstat:%s у файла %s\n",
-                 strerror (errno), file_name);
+  assert(fstat (module_fd, &statbuf) == 0);
 
-  if ((src = mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, module_fd, 0))
-      == MAP_FAILED)
-    print_error ("%s\n", "Ошибка вызова функции mmap для входного файла");
+  src = mmap (0, statbuf.st_size, PROT_READ, MAP_SHARED, module_fd, 0);
+  assert(src != MAP_FAILED);
 
   limit = (const char *)src + statbuf.st_size;
   start_pos = (const char *)src;

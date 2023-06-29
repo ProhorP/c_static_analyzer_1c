@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <assert.h>
 #include "../main.h"
 #include "../syn.h"
 
@@ -12,9 +13,8 @@ main (int argc, char **argv)
   yydebug = 1;
   #endif
 
-  if (argc != 2)
-    print_error ("%s",
-		 "Правильный формат:./a.out ./test/test01");
+  //Правильный формат:./a.out ./test/test01
+  assert(argc == 2);
 
   int ret_val;
 
