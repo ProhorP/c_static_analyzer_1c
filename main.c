@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
 #include "main.h"
 #include "syn.h"
 #include <assert.h>
@@ -16,18 +15,18 @@
 char * choose_string = NULL;//value free at destroy symbol_table
 char * field_query = "Поле запроса";
 
-GHashTable *symbol_table = NULL, *token_table = NULL,
-           *dynamic_val_table = NULL;
-char buf_str[BUFFSIZE] = { 0 };
+GHashTable *symbol_table, *token_table,
+           *dynamic_val_table;
+char buf_str[BUFFSIZE];
 
-int module_fd = 0;
-struct stat statbuf = { 0 };
+int module_fd;
+struct stat statbuf;
 
-void *src = NULL;
-const char *start_pos = NULL;
-const char *end_pos = NULL;
-const char *limit = NULL;
-size_t line = 1;
+void *src;
+const char *start_pos;
+const char *end_pos;
+const char *limit;
+size_t line;
 
 int
 get_token (int pre_token, YYSTYPE *lvalp, YYLTYPE *llocp)
@@ -240,6 +239,9 @@ fill_symbol_table ()
 void
 init_lex (char *file_name)
 {
+
+  set_default();
+
   module_fd = open (file_name, O_RDONLY);
   assert(module_fd > 0);
 
@@ -271,10 +273,23 @@ destroy_lex ()
   g_hash_table_destroy (symbol_table);
   g_hash_table_destroy (token_table);
   g_hash_table_destroy (dynamic_val_table);
+  set_default();
+}
+
+void
+set_default ()
+{
+  memset (buf_str, sizeof (char), BUFFSIZE);
+  memset (&statbuf, sizeof (struct stat), 1);
+  module_fd = 0;
+  src = NULL;
+  start_pos = NULL;
+  end_pos = NULL;
+  limit = NULL;
+  line = 1;
   symbol_table = NULL;
   token_table = NULL;
   dynamic_val_table = NULL;
-  line = 1;
 }
 
 void

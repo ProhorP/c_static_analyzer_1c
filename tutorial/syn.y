@@ -1,3 +1,9 @@
+/*
+Читайте документацию тут
+https://www.gnu.org/software/bison/manual/bison.html
+Она очень большая, но понятная как книги Радченко по 1С с множеством примеров
+*/
+
 /* Infix notation calculator. */
 
 %{
@@ -137,7 +143,6 @@ line:
 | object '=' literal ';' %prec ASG         {PRINT("ASG literal %s=\n", $1); insert_dynamic_val_table($1, $3);}
 | object '=' date ';' %prec ASG         {PRINT("ASG date %s=\n", $1); insert_dynamic_val_table($1, $3);}
 | object '=' new ';' %prec ASG         {PRINT("ASG new %s=\n", $1); insert_dynamic_val_table($1, $3);}
-| object '=' t_lack ';' %prec ASG         {PRINT("ASG t_lack %s=\n", $1); insert_dynamic_val_table($1, $3);}
 | goto       { PRINT ("%s\n", "goto обработана"); }
 | mark       { PRINT ("%s\n", "mark обработана"); }
 | define_var          { PRINT ("%s\n", "define_var обработана"); }
