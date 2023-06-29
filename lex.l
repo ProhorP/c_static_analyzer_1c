@@ -37,6 +37,7 @@ yylex (YYSTYPE *lvalp, YYLTYPE *llocp)
      whitespace = [ ]+;
      tab = [\t]+;
      newline = [\n];
+     carriage = [\r];
      lt = '<';
      le = [<][=];
      eq = '=';
@@ -53,7 +54,7 @@ yylex (YYSTYPE *lvalp, YYLTYPE *llocp)
      number = digits([\.]digits)?;
      date = ['] [^']+ ['];
      literal = ["] ([^"] | ["]["])* ["];
-     id = [^'"\.,:;()\[\] \t\n=<>+\-*\/%&#~]+;
+     id = [^'"\.,:;()\[\] \t\n\r=<>+\-*\/%&#~]+;
      mark = [~] id;
      directive = [&] id;
      preprocessor = [#][^\n]+;
@@ -70,6 +71,7 @@ yylex (YYSTYPE *lvalp, YYLTYPE *llocp)
      whitespace { end_pos = YYCURSOR; goto loop; }
      tab { end_pos = YYCURSOR; goto loop; }
      newline { line++ ; end_pos = YYCURSOR; goto loop; }
+     carriage { end_pos = YYCURSOR; goto loop; }
      lt { end_pos = YYCURSOR; return AS_TOKEN('<'); }
      le { end_pos = YYCURSOR; return LE; }
      eq { end_pos = YYCURSOR; return AS_TOKEN('='); }

@@ -9,6 +9,12 @@
 #define AS_PTR(val) (intptr_t) (val)
 #define AS_TOKEN(val) (int)(val)
 
+#if YYDEBUG
+#define PRINT(...) printf (__VA_ARGS__)
+#else
+#define PRINT(...) 
+#endif
+
 void print_error (const char *format, ...);
 
 void init_lex (char *file_name);
@@ -26,8 +32,6 @@ extern const char *end_pos;
 extern const char *limit;
 extern size_t line;
 
-extern char * query_string;
-extern char * execute_string;
 extern char * choose_string;
 extern char * field_query;
 #endif /* !MAIN_H */

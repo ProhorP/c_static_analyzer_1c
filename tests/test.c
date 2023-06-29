@@ -8,7 +8,9 @@ int
 main (int argc, char **argv)
 {
 
-  yydebug=1;
+  #if YYDEBUG
+  yydebug = 1;
+  #endif
 
   if (argc != 2)
     print_error ("%s",

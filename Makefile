@@ -3,12 +3,15 @@ CFLAGS=-Wall -Wextra -Wpedantic -std=c11 -g
 GLIB_CONF=`pkg-config --cflags glib-2.0`
 GLIB_LIB=`pkg-config --libs glib-2.0`
 PCRE_LIB=`pcre-config --libs`
+DEBUG=-t
 
 all: test
 
-test: generic_files build_test test01 #test02 test03
+test: generic_files build_test test01
 
-memory_leak_test: generic_files build_test test01_m #test02_m test03_m 
+debug: generic_files_debug build_test test01
+
+memory_leak_test: generic_files_debug build_test test01_m
 
 analyzer_clang:
 	scan-build make
@@ -23,6 +26,10 @@ generic_files:
 	bison syn.y;
 	re2c ./lex.l -o ./lex.c -8 --case-ranges -i
 
+generic_files_debug:
+	bison $(DEBUG) syn.y;
+	re2c ./lex.l -o ./lex.c -8 --case-ranges -i
+
 build_test:
 	$(CC) $(CFLAGS) $(GLIB_CONF) ./tests/test.c main.c syn.c lex.c $(GLIB_LIB) $(PCRE_LIB) -o ./tests/test
 
@@ -31,18 +38,6 @@ test01:
 
 test01_m:
 	valgrind --leak-check=full ./tests/test ./tests/module01
-
-test02:
-	./tests/test ./tests/module02
-
-test02_m:
-	valgrind --leak-check=full ./tests/test ./tests/module02
-
-test03:
-	./tests/test ./tests/module03
-
-test03_m:
-	valgrind --leak-check=full ./tests/test ./tests/module03
 
 clean:
 	rm ./tests/test;

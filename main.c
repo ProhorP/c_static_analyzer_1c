@@ -13,8 +13,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-char * query_string = NULL;//value free at destroy symbol_table
-char * execute_string = "ВЫПОЛНИТЬ";
 char * choose_string = NULL;//value free at destroy symbol_table
 char * field_query = "Поле запроса";
 
@@ -194,7 +192,7 @@ fill_token_table ()
   g_hash_table_insert (token_table, "ENDTRY", AS_PTR (ENDTRY));
   g_hash_table_insert (token_table, "НОВЫЙ", AS_PTR (NEW));
   g_hash_table_insert (token_table, "NEW", AS_PTR (NEW));
-  g_hash_table_insert (token_table, (void *) execute_string, AS_PTR (EXECUTE));
+  g_hash_table_insert (token_table, "ВЫПОЛНИТЬ", AS_PTR (EXECUTE));
   g_hash_table_insert (token_table, "EXECUTE", AS_PTR (EXECUTE));
   g_hash_table_insert (token_table, "ДОБАВИТЬОБРАБОТЧИК",
                        AS_PTR (ADDHANDLER));
@@ -242,13 +240,10 @@ fill_token_table ()
 void
 fill_symbol_table ()
 {
-  query_string = malloc (strlen ("ЗАПРОС") + 1);
-  strcpy (query_string, "ЗАПРОС");
   choose_string = malloc (strlen ("ВЫБРАТЬ") + 1);
   strcpy (choose_string, "ВЫБРАТЬ");
 
   // QUERY
-  g_hash_table_insert (symbol_table, g_strdup(query_string), query_string);
   g_hash_table_insert (symbol_table, g_strdup(choose_string), choose_string);
 }
 
@@ -268,6 +263,10 @@ init_lex (char *file_name)
 
   limit = (const char *)src + statbuf.st_size;
   start_pos = (const char *)src;
+  //skip bom symbols
+  if (start_pos[0] == (char)0xEF && start_pos[1] == (char)0xBB
+      && start_pos[2] == (char)0xBF)
+    start_pos += 3;
   end_pos = NULL;
   symbol_table
       = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
@@ -294,7 +293,7 @@ destroy_lex ()
 void
 insert_dynamic_val_table (char *key, char *value)
 {
-  printf ("key:%s; value=%s\n", key, value);
+  PRINT ("key:%s; value=%s\n", key, value);
   g_hash_table_insert (dynamic_val_table, key, value);
 }
 
