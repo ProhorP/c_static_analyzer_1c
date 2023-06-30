@@ -1,6 +1,8 @@
 # c_static_analyzer_1c
 ## test
 make test
+## debug
+make debug
 ## clean
 make clean
 # DEPENDENCIES
