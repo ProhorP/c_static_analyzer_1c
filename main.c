@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 char * choose_string = NULL;//value free at destroy symbol_table
 char * field_query = "Поле запроса";
@@ -270,6 +271,8 @@ void
 destroy_lex ()
 {
   munmap (src, statbuf.st_size);
+  int status = close (module_fd);
+  assert (status == 0);
   g_hash_table_destroy (symbol_table);
   g_hash_table_destroy (token_table);
   g_hash_table_destroy (dynamic_val_table);
@@ -279,8 +282,8 @@ destroy_lex ()
 void
 set_default ()
 {
-  memset (buf_str, sizeof (char), BUFFSIZE);
-  memset (&statbuf, sizeof (struct stat), 1);
+  memset (buf_str, 0, sizeof (char) * BUFFSIZE);
+  memset (&statbuf, 0, sizeof (struct stat));
   module_fd = 0;
   src = NULL;
   start_pos = NULL;
