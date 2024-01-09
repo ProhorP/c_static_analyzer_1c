@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 char * choose_string = NULL;//value free at destroy symbol_table
-char * field_query = "Поле запроса";
+char * field_query = "Поле запроса 1";
 
 GHashTable *symbol_table, *token_table,
            *dynamic_val_table;
@@ -24,9 +24,9 @@ int module_fd;
 struct stat statbuf;
 
 void *src;
-const char *start_pos;
-const char *end_pos;
-const char *limit;
+const char* start_pos;
+const char* end_pos;
+const char* limit;
 size_t line;
 
 int
