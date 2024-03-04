@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Wpedantic -std=c11 
+CFLAGS=-Wall -Wextra -Wpedantic -std=c23 
 GLIB_CONF=`pkg-config --cflags glib-2.0`
 GLIB_LIB=`pkg-config --libs glib-2.0`
 PCRE_LIB=`pcre-config --libs`
