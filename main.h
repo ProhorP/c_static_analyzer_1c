@@ -19,6 +19,7 @@ void insert_dynamic_val_table (char *key, char *value);
 char *check_dereference (char *obj, char *field, size_t field_line);
 void set_default ();
 
+//vars
 extern const char *start_pos;
 extern const char *end_pos;
 extern const char *limit;
