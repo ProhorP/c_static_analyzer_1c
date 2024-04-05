@@ -20,7 +20,7 @@ GHashTable *symbol_table, *token_table,
            *dynamic_val_table;
 char buf_str[BUFFSIZE];
 
-int module_fd;
+static int module_fd;
 struct stat statbuf;
 
 void *src;
