@@ -1,13 +1,13 @@
 # c_static_analyzer_1c
 ## test
-make test
+make test;
 ## debug
-make debug
+make debug;
 ## clean
-make clean
+make clean;
 # DEPENDENCIES
 ## FOR UBUNTU
-sudo apt install re2c bison pkg-config  
+sudo apt install -y re2c bison pkg-config ; 
 ### for static analyzer clang
 sudo apt install clang-tools  
 make analyzer_clang  
