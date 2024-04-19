@@ -13,7 +13,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 
-char * choose_string = NULL;//value free at destroy symbol_table
+char * choose_string = NULL;//value free at destroy symbol_table!
 char * field_query = "Поле запроса 1";
 
 GHashTable *symbol_table, *token_table,
