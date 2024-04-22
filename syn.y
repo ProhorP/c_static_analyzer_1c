@@ -12,7 +12,7 @@
   void yyerror (YYLTYPE *locp, char const *msg);
 }
 
-/* Bison declarations. */
+/* Bison decla1rations. */
 %language "c"
 %verbose
 //%define parse.trace
