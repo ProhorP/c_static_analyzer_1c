@@ -1,4 +1,4 @@
-/* Infix notation calculato. */
+/* Infix notation calculator. */
 
 %{
  // #include <ctype.h>
