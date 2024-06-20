@@ -15,6 +15,7 @@ yylex (YYSTYPE *lvalp, YYLTYPE *llocp)
 
   if (end_pos)
     start_pos = end_pos;
+//start
 
   if (start_pos == limit)
     return YYEOF;
