@@ -9,7 +9,7 @@ make clean;
 ## FOR UBUNTU
 sudo apt install -y re2c bison pkg-config ; 
 ### for static analyzer clang
-sudo apt install clang-tools  
+sudo apt install clang-tools;  
 make analyzer_clang  
 ### for static analyzer pvs-studio
 sudo apt install sudo dpkg  
